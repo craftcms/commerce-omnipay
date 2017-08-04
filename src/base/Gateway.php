@@ -35,7 +35,6 @@ abstract class Gateway extends BaseGateway
         return new $itemBagClassName($items);
     }
 
-
     // Protected Methods
     // =========================================================================
 
