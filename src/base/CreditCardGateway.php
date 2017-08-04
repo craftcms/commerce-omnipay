@@ -9,14 +9,8 @@ use Omnipay\Common\CreditCard;
 use Omnipay\Common\Message\AbstractRequest;
 
 /**
- * This is an abstract class to be used by credit card gateways
- *
  * @author    Pixel & Tonic, Inc. <support@pixelandtonic.com>
- * @copyright Copyright (c) 2017, Pixel & Tonic, Inc.
- * @license   https://craftcommerce.com/license Craft Commerce License Agreement
- * @see       https://craftcommerce.com
- * @package   craft.commerce
- * @since     2.0
+ * @since     1.0
  */
 abstract class CreditCardGateway extends Gateway
 {

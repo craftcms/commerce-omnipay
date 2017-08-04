@@ -6,19 +6,10 @@ use craft\commerce\base\Gateway as BaseGateway;
 use craft\commerce\elements\Order;
 use Omnipay\Common\AbstractGateway;
 use Omnipay\Common\ItemBag;
-use Omnipay\Omnipay;
 
 /**
- * Class Payment Method Model
- *
- * @package   Craft
-
  * @author    Pixel & Tonic, Inc. <support@pixelandtonic.com>
- * @copyright Copyright (c) 2017, Pixel & Tonic, Inc.
- * @license   https://craftcommerce.com/license Craft Commerce License Agreement
- * @see       https://craftcommerce.com
- * @package   craft.commerce
- * @since     2.0
+ * @since     1.0
  */
 abstract class Gateway extends BaseGateway
 {
