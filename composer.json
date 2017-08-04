@@ -1,0 +1,46 @@
+{
+  "name": "craftcms/commerce-omnipay",
+  "description": "Omnipay integration for Craft Commerce",
+  "version": "1.0.0",
+  "keywords": [
+    "commerce",
+    "craftcms",
+    "omnipay",
+    "yii2"
+  ],
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Pixel & Tonic",
+      "homepage": "https://pixelandtonic.com/"
+    }
+  ],
+  "support": {
+    "email": "support@craftcms.com",
+    "issues": "https://github.com/craftcms/commerce-omnipay/issues?state=open",
+    "source": "https://github.com/craftcms/commerce-omnipay",
+    "docs": "https://github.com/craftcms/commerce-omnipay",
+    "rss": "https://github.com/craftcms/commerce-omnipay/commits/master.atom"
+  },
+  "require": {
+    "craftcms/commerce": "*",
+    "omnipay/common": "~2.3"
+  },
+  "autoload": {
+    "psr-4": {
+      "craft\\commerce\\omnipay\\": "src/"
+    }
+  },
+  "repositories": [
+    {
+      "type": "composer",
+      "url": "https://asset-packagist.org"
+    }
+  ],
+  "extra": {
+    "name": "Omnipay",
+    "handle": "commerce-omnipay",
+    "changelogUrl": "https://raw.githubusercontent.com/craftcms/commerce-omnipay/master/CHANGELOG.md",
+    "downloadUrl": "https://github.com/craftcms/commerce-omnipay/archive/master.zip"
+  }
+}

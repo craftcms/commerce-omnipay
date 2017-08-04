@@ -1,2 +1,2 @@
-# commerce-omnipay
-Omnipay support for Craft Commerce
+Omnipay payment gateway support for Craft Commerce
+=======================
