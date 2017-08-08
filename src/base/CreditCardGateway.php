@@ -3,11 +3,11 @@
 namespace craft\commerce\omnipay\base;
 
 use craft\commerce\base\CreditCardGatewayTrait;
+use craft\commerce\base\PurchaseRequest;
 use craft\commerce\elements\Order;
 use craft\commerce\models\payments\BasePaymentForm;
 use craft\commerce\models\payments\CreditCardPaymentForm;
 use Omnipay\Common\CreditCard;
-use Omnipay\Common\Message\AbstractRequest;
 
 /**
  * @author    Pixel & Tonic, Inc. <support@pixelandtonic.com>
@@ -20,7 +20,7 @@ abstract class CreditCardGateway extends Gateway
     /**
      * @inheritdoc
      */
-    public function createCard(Order $order, BasePaymentForm $paymentForm) {
+    public function createCard(Order $order, BasePaymentForm $paymentForm): CreditCard {
 
         $card = new CreditCard;
 
@@ -106,10 +106,10 @@ abstract class CreditCardGateway extends Gateway
     /**
      * @inheritdoc
      */
-    public function populateRequest(AbstractRequest $request, BasePaymentForm $paymentForm)
+    public function populateRequest(array &$request, BasePaymentForm $paymentForm)
     {
         if ($paymentForm->hasProperty('token')) {
-            $request->setToken($paymentForm->token);
+            $request['token'] = $paymentForm->token;
         }
     }
 }
