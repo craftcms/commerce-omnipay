@@ -3,7 +3,6 @@
 namespace craft\commerce\omnipay\base;
 
 use craft\commerce\base\CreditCardGatewayTrait;
-use craft\commerce\base\PurchaseRequest;
 use craft\commerce\elements\Order;
 use craft\commerce\models\payments\BasePaymentForm;
 use craft\commerce\models\payments\CreditCardPaymentForm;
