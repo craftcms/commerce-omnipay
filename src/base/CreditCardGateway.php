@@ -101,14 +101,4 @@ abstract class CreditCardGateway extends Gateway
         $card->setExpiryYear($paymentForm->year);
         $card->setCvv($paymentForm->cvv);
     }
-
-    /**
-     * @inheritdoc
-     */
-    public function populateRequest(array &$request, BasePaymentForm $paymentForm)
-    {
-        if ($paymentForm->hasProperty('token')) {
-            $request['token'] = $paymentForm->token;
-        }
-    }
 }

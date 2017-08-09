@@ -10,10 +10,12 @@ use craft\commerce\events\SendPaymentRequestEvent;
 use craft\commerce\models\payments\BasePaymentForm;
 use craft\commerce\models\Transaction;
 use craft\commerce\Plugin;
+use craft\commerce\records\Transaction as TransactionRecord;
 use craft\helpers\UrlHelper;
 use Omnipay\Common\AbstractGateway;
 use Omnipay\Common\CreditCard;
 use Omnipay\Common\ItemBag;
+use Omnipay\Common\Message\AbstractRequest;
 use Omnipay\Common\Message\AbstractResponse;
 use Omnipay\Common\Message\RequestInterface;
 use Omnipay\Common\Message\ResponseInterface;
@@ -134,14 +136,19 @@ abstract class Gateway extends BaseGateway
     /**
      * @inheritdoc
      */
-    protected function getRequest(Transaction $transaction, BasePaymentForm $form)
+    protected function getRequest(Transaction $transaction, BasePaymentForm $form = null)
     {
-        $order = $transaction->getOrder();
-        $card = $this->createCard($order, $form);
-        $itemBag = $this->getItemBagForOrder($order);
+        // For authorize and capture we're referring to a transaction that already took place so no card or item shenanigans.
+        if (in_array($transaction->type, [TransactionRecord::TYPE_REFUND, TransactionRecord::TYPE_CAPTURE], false)) {
+            $request = $this->createPaymentRequest($transaction);
+        } else {
+            $order = $transaction->getOrder();
+            $card = $this->createCard($order, $form);
+            $itemBag = $this->getItemBagForOrder($order);
 
-        $request = $this->createPaymentRequest($transaction, $card, $itemBag);
-        $this->populateRequest($request, $form);
+            $request = $this->createPaymentRequest($transaction, $card, $itemBag);
+            $this->populateRequest($request, $form);
+        }
 
         return $request;
     }
@@ -195,6 +202,26 @@ abstract class Gateway extends BaseGateway
     /**
      * @inheritdoc
      */
+    protected function prepareCaptureRequest($request, string $reference): RequestInterface
+    {
+        /** @var AbstractRequest $captureRequest */
+        $captureRequest = $this->gateway()->capture($request);
+        $captureRequest->setTransactionReference($reference);
+
+        return $captureRequest;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    protected function preparePurchaseRequest($request): RequestInterface
+    {
+        return $this->gateway()->purchase($request);
+    }
+
+    /**
+     * @inheritdoc
+     */
     protected function prepareResponse($response): RequestResponseInterface
     {
         /** @var AbstractResponse $response */
@@ -204,9 +231,14 @@ abstract class Gateway extends BaseGateway
     /**
      * @inheritdoc
      */
-    protected function preparePurchaseRequest($request): RequestInterface
+    protected function prepareRefundRequest($request, string $reference): RequestInterface
     {
-        return $this->gateway()->purchase($request);
+        /** @var AbstractRequest $refundRequest */
+        $refundRequest = $this->gateway()->refund($request);
+        $refundRequest->setTransactionReference($reference);
+
+        return $refundRequest;
+
     }
 
     /**
