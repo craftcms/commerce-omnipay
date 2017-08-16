@@ -2,10 +2,11 @@
 
 namespace craft\commerce\omnipay\base;
 
-use craft\commerce\base\CreditCardGatewayTrait;
 use craft\commerce\elements\Order;
 use craft\commerce\models\payments\BasePaymentForm;
 use craft\commerce\models\payments\CreditCardPaymentForm;
+use craft\commerce\models\Transaction;
+use craft\commerce\records\Transaction as TransactionRecord;
 use Omnipay\Common\CreditCard;
 
 /**
@@ -15,6 +16,27 @@ use Omnipay\Common\CreditCard;
 abstract class CreditCardGateway extends Gateway
 {
     use CreditCardGatewayTrait;
+
+    /**
+     * @inheritdoc
+     */
+    protected function getRequest(Transaction $transaction, BasePaymentForm $form = null)
+    {
+        // For authorize and capture we're referring to a transaction that already took place so no card or item shenanigans.
+        if (in_array($transaction->type, [TransactionRecord::TYPE_REFUND, TransactionRecord::TYPE_CAPTURE], false)) {
+            $request = $this->createPaymentRequest($transaction);
+        } else {
+            $order = $transaction->getOrder();
+
+            $card = $this->createCard($order, $form);
+            $itemBag = $this->getItemBagForOrder($order);
+
+            $request = $this->createPaymentRequest($transaction, $card, $itemBag);
+            $this->populateRequest($request, $form);
+        }
+
+        return $request;
+    }
 
     /**
      * @inheritdoc

@@ -10,7 +10,6 @@ use craft\commerce\events\SendPaymentRequestEvent;
 use craft\commerce\models\payments\BasePaymentForm;
 use craft\commerce\models\Transaction;
 use craft\commerce\Plugin;
-use craft\commerce\records\Transaction as TransactionRecord;
 use craft\helpers\UrlHelper;
 use Omnipay\Common\AbstractGateway;
 use Omnipay\Common\CreditCard;
@@ -35,16 +34,6 @@ abstract class Gateway extends BaseGateway
     // =========================================================================
 
     /**
-     * Create a payment card based on Order and Payment form.
-     *
-     * @param Order           $order The order.
-     * @param BasePaymentForm $form The payment form.
-     *
-     * @return mixed
-     */
-    abstract public function createCard(Order $order, BasePaymentForm $form): CreditCard;
-    
-    /**
      * Creates and returns an Omnipay gateway instance based on the stored settings.
      *
      * @return AbstractGateway The actual gateway.
@@ -60,7 +49,7 @@ abstract class Gateway extends BaseGateway
      */
     protected function createItemBagForOrder(Order $order): ItemBag
     {
-        if (!$this->canSendCartInfo) {
+        if (!$this->sendCartInfo) {
             return null;
         }
 
@@ -88,7 +77,7 @@ abstract class Gateway extends BaseGateway
             'description' => Craft::t('commerce', 'Order').' #'.$transaction->orderId,
             'clientIp' => Craft::$app->getRequest()->userIP,
             'transactionReference' => $transaction->hash,
-            'returnUrl' => UrlHelper::actionUrl('commerce/payments/completePayment', ['commerceTransactionId' => $transaction->id, 'commerceTransactionHash' => $transaction->hash]),
+            'returnUrl' => UrlHelper::actionUrl('commerce/payments/complete-payment', ['commerceTransactionId' => $transaction->id, 'commerceTransactionHash' => $transaction->hash]),
             'cancelUrl' => UrlHelper::siteUrl($transaction->order->cancelUrl),
         ];
 
@@ -98,7 +87,7 @@ abstract class Gateway extends BaseGateway
         // TODO: move the handler logic into the gateway adapter itself if the Omnipay v2 interface cannot standardise.
         // TODO: It was moved. What now?
         if ($this->useNotifyUrl()) {
-            $request['notifyUrl'] = UrlHelper::actionUrl('commerce/payments/acceptNotification', ['commerceTransactionId' => $transaction->id, 'commerceTransactionHash' => $transaction->hash]);
+            $request['notifyUrl'] = UrlHelper::actionUrl('commerce/payments/accept-notification', ['commerceTransactionId' => $transaction->id, 'commerceTransactionHash' => $transaction->hash]);
             unset($request['returnUrl']);
         } else {
             $request['notifyUrl'] = $request['returnUrl'];
@@ -128,26 +117,6 @@ abstract class Gateway extends BaseGateway
 
         if ($itemBag) {
             $request['items'] = $itemBag;
-        }
-
-        return $request;
-    }
-
-    /**
-     * @inheritdoc
-     */
-    protected function getRequest(Transaction $transaction, BasePaymentForm $form = null)
-    {
-        // For authorize and capture we're referring to a transaction that already took place so no card or item shenanigans.
-        if (in_array($transaction->type, [TransactionRecord::TYPE_REFUND, TransactionRecord::TYPE_CAPTURE], false)) {
-            $request = $this->createPaymentRequest($transaction);
-        } else {
-            $order = $transaction->getOrder();
-            $card = $this->createCard($order, $form);
-            $itemBag = $this->getItemBagForOrder($order);
-
-            $request = $this->createPaymentRequest($transaction, $card, $itemBag);
-            $this->populateRequest($request, $form);
         }
 
         return $request;
@@ -189,7 +158,7 @@ abstract class Gateway extends BaseGateway
      *
      * @return void
      */
-    abstract public function populateRequest(array &$request, BasePaymentForm $form);
+    abstract public function populateRequest(array &$request, BasePaymentForm $form = null);
 
     /**
      * @inheritdoc
@@ -198,7 +167,29 @@ abstract class Gateway extends BaseGateway
     {
         return $this->gateway()->authorize($request);
     }
-    
+
+    /**
+     * @inheritdoc
+     */
+    protected function prepareCompleteAuthorizeRequest($request)
+    {
+        /** @var AbstractRequest $completeRequest */
+        $completeRequest = $this->gateway()->completeAuthorize($request);
+
+        return $completeRequest;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    protected function prepareCompletePurchaseRequest($request)
+    {
+        /** @var AbstractRequest $completeRequest */
+        $completeRequest = $this->gateway()->completePurchase($request);
+
+        return $completeRequest;
+    }
+
     /**
      * @inheritdoc
      */
@@ -280,6 +271,22 @@ abstract class Gateway extends BaseGateway
     public function supportsCapture(): bool
     {
         return $this->gateway()->supportsCapture();
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function supportsCompleteAuthorize(): bool
+    {
+        return $this->gateway()->supportsCompleteAuthorize();
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function supportsCompletePurchase(): bool
+    {
+        return $this->gateway()->supportsCompletePurchase();
     }
 
     /**
