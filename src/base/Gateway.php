@@ -6,10 +6,16 @@ use Craft;
 use craft\commerce\base\Gateway as BaseGateway;
 use craft\commerce\base\RequestResponseInterface;
 use craft\commerce\elements\Order;
+use craft\commerce\events\GatewayRequestEvent;
+use craft\commerce\events\ItemBagEvent;
 use craft\commerce\events\SendPaymentRequestEvent;
+use craft\commerce\helpers\Currency;
+use craft\commerce\models\LineItem;
+use craft\commerce\models\OrderAdjustment;
 use craft\commerce\models\payments\BasePaymentForm;
 use craft\commerce\models\Transaction;
 use craft\commerce\Plugin;
+use craft\errors\GatewayRequestCancelledException;
 use craft\helpers\UrlHelper;
 use Omnipay\Common\AbstractGateway;
 use Omnipay\Common\CreditCard;
@@ -18,6 +24,7 @@ use Omnipay\Common\Message\AbstractRequest;
 use Omnipay\Common\Message\AbstractResponse;
 use Omnipay\Common\Message\RequestInterface;
 use Omnipay\Common\Message\ResponseInterface;
+use yii\base\NotSupportedException;
 
 /**
  * @author    Pixel & Tonic, Inc. <support@pixelandtonic.com>
@@ -30,6 +37,154 @@ abstract class Gateway extends BaseGateway
      */
     private $_gateway;
 
+    /**
+     * @inheritdocs
+     */
+    public function authorize(Transaction $transaction, BasePaymentForm $form): RequestResponseInterface
+    {
+        if (!$this->supportsAuthorize()) {
+            throw new NotSupportedException(Craft::t('commerce', 'Authorizing is not supported by this gateway'));
+        }
+
+        $request = $this->createRequest($transaction, $form);
+        $authorizeRequest = $this->prepareAuthorizeRequest($request);
+
+        return $this->performRequest($authorizeRequest, $transaction);
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function capture(Transaction $transaction, string $reference): RequestResponseInterface
+    {
+        if (!$this->supportsCapture()) {
+            throw new NotSupportedException(Craft::t('commerce', 'Capturing is not supported by this gateway'));
+        }
+
+        $request = $this->createRequest($transaction);
+        $captureRequest = $this->prepareCaptureRequest($request, $reference);
+
+        return $this->performRequest($captureRequest, $transaction);
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function completeAuthorize(Transaction $transaction): RequestResponseInterface
+    {
+        if (!$this->supportsCompleteAuthorize()) {
+            throw new NotSupportedException(Craft::t('commerce', 'Completing authorization is not supported by this gateway'));
+        }
+
+        $request = $this->createRequest($transaction);
+        $completeRequest = $this->prepareCompleteAuthorizeRequest($request);
+
+        return $this->performRequest($completeRequest, $transaction);
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function completePurchase(Transaction $transaction): RequestResponseInterface
+    {
+        if (!$this->supportsCompletePurchase()) {
+            throw new NotSupportedException(Craft::t('commerce', 'Completing purchase is not supported by this gateway'));
+        }
+
+        $request = $this->createRequest($transaction);
+        $completeRequest = $this->prepareCompletePurchaseRequest($request);
+
+        return $this->performRequest($completeRequest, $transaction);
+    }
+
+    /**
+     * Populate the request array before it's dispatched.
+     *
+     * @param array $request Parameter array by reference.
+     * @param BasePaymentForm $form
+     *
+     * @return void
+     */
+    abstract public function populateRequest(array &$request, BasePaymentForm $form = null);
+
+    /**
+     * @inheritdocs
+     */
+    public function purchase(Transaction $transaction, BasePaymentForm $form): RequestResponseInterface
+    {
+        if (!$this->supportsPurchase()) {
+            throw new NotSupportedException(Craft::t('commerce', 'Purchasing is not supported by this gateway'));
+        }
+
+        $request = $this->createRequest($transaction, $form);
+        $purchaseRequest = $this->preparePurchaseRequest($request);
+
+        return $this->performRequest($purchaseRequest, $transaction);
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function refund(Transaction $transaction, string $reference): RequestResponseInterface
+    {
+        if (!$this->supportsRefund()) {
+            throw new NotSupportedException(Craft::t('commerce', 'Refunding is not supported by this gateway'));
+        }
+
+        $request = $this->createRequest($transaction);
+        $refundRequest = $this->prepareRefundRequest($request, $reference);
+
+        return $this->performRequest($refundRequest, $transaction);
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function supportsAuthorize(): bool
+    {
+        return $this->gateway()->supportsAuthorize();
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function supportsCapture(): bool
+    {
+        return $this->gateway()->supportsCapture();
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function supportsCompleteAuthorize(): bool
+    {
+        return $this->gateway()->supportsCompleteAuthorize();
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function supportsCompletePurchase(): bool
+    {
+        return $this->gateway()->supportsCompletePurchase();
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function supportsPurchase(): bool
+    {
+        return $this->gateway()->supportsPurchase();
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function supportsRefund(): bool
+    {
+        return $this->gateway()->supportsRefund();
+    }
+
     // Protected Methods
     // =========================================================================
 
@@ -38,7 +193,7 @@ abstract class Gateway extends BaseGateway
      *
      * @return AbstractGateway The actual gateway.
      */
-    abstract protected function createGateway();
+    abstract protected function createGateway(): AbstractGateway;
 
     /**
      * Create a gateway specific item bag for the order.
@@ -68,7 +223,7 @@ abstract class Gateway extends BaseGateway
      *
      * @return array
      */
-    protected function createPaymentRequest(Transaction $transaction, $card = null, $itemBag = null)
+    protected function createPaymentRequest(Transaction $transaction, $card = null, $itemBag = null): array
     {
         $request = [
             'amount' => $transaction->paymentAmount,
@@ -123,6 +278,16 @@ abstract class Gateway extends BaseGateway
     }
 
     /**
+     * Prepare a request for execution by transaction and a populated payment form.
+     *
+     * @param Transaction     $transaction
+     * @param BasePaymentForm $form        Optional for capture/refund requests.
+     *
+     * @return mixed
+     */
+    abstract protected function createRequest(Transaction $transaction, BasePaymentForm $form = null);
+
+    /**
      * @return AbstractGateway
      */
     protected function gateway(): AbstractGateway
@@ -151,14 +316,124 @@ abstract class Gateway extends BaseGateway
     }
 
     /**
-     * Populate the request array before it's dispatched.
+     * Get the item bag for the order.
      *
-     * @param array $request Parameter array by reference.
-     * @param BasePaymentForm $form
+     * @param Order $order
      *
-     * @return void
+     * @return mixed
      */
-    abstract public function populateRequest(array &$request, BasePaymentForm $form = null);
+    protected function getItemBagForOrder(Order $order)
+    {
+        $itemBag = $this->createItemBagForOrder($order);
+
+        $event = new ItemBagEvent([
+            'items' => $itemBag,
+            'order' => $order
+        ]);
+        $this->trigger(self::EVENT_AFTER_CREATE_ITEM_BAG, $event);
+
+        return $event->items;
+    }
+
+    /**
+     * Generate the item list for an Order.
+     *
+     * @param Order $order
+     *
+     * @return array
+     */
+    protected function getItemListForOrder(Order $order): array
+    {
+        $items = [];
+
+        $priceCheck = 0;
+        $count = -1;
+
+        /** @var LineItem $item */
+        foreach ($order->lineItems as $item) {
+            $price = Currency::round($item->salePrice);
+            // Can not accept zero amount items. See item (4) here:
+            // https://developer.paypal.com/docs/classic/express-checkout/integration-guide/ECCustomizing/#setting-order-details-on-the-paypal-review-page
+
+            if ($price !== 0) {
+                $count++;
+                /** @var Purchasable $purchasable */
+                $purchasable = $item->getPurchasable();
+                $defaultDescription = Craft::t('commerce', 'Item ID').' '.$item->id;
+                $purchasableDescription = $purchasable ? $purchasable->getDescription() : $defaultDescription;
+                $description = isset($item->snapshot['description']) ? $item->snapshot['description'] : $purchasableDescription;
+                $description = empty($description) ? 'Item '.$count : $description;
+                $items[] = [
+                    'name' => $description,
+                    'description' => $description,
+                    'quantity' => $item->qty,
+                    'price' => $price,
+                ];
+
+                $priceCheck += ($item->qty * $item->salePrice);
+            }
+        }
+
+        $count = -1;
+
+        /** @var OrderAdjustment $adjustment */
+        foreach ($order->adjustments as $adjustment) {
+            $price = Currency::round($adjustment->amount);
+
+            // Do not include the 'included' adjustments, and do not send zero value items
+            // See item (4) https://developer.paypal.com/docs/classic/express-checkout/integration-guide/ECCustomizing/#setting-order-details-on-the-paypal-review-page
+            if (($adjustment->included == 0 || $adjustment->included == false) && $price !== 0) {
+                $count++;
+                $items[] = [
+                    'name' => empty($adjustment->name) ? $adjustment->type." ".$count : $adjustment->name,
+                    'description' => empty($adjustment->description) ? $adjustment->type.' '.$count : $adjustment->description,
+                    'quantity' => 1,
+                    'price' => $price,
+                ];
+                $priceCheck += $adjustment->amount;
+            }
+        }
+
+        $priceCheck = Currency::round($priceCheck);
+        $totalPrice = Currency::round($order->totalPrice);
+        $same = (bool)($priceCheck === $totalPrice);
+
+        if (!$same) {
+            Craft::error('Item bag total price does not equal the orders totalPrice, some payment gateways will complain.', __METHOD__);
+        }
+
+        return $items;
+    }
+
+    /**
+     * Perform a request and return the response.
+     *
+     * @param $request
+     * @param $transaction
+     *
+     * @return RequestResponseInterface
+     * @throws GatewayRequestCancelledException
+     */
+    protected function performRequest($request, $transaction)
+    {
+        //raising event
+        $event = new GatewayRequestEvent([
+            'type' => $transaction->type,
+            'request' => $request,
+            'transaction' => $transaction
+        ]);
+
+        // Raise 'beforeGatewayRequestSend' event
+        $this->trigger(self::EVENT_BEFORE_GATEWAY_REQUEST_SEND, $event);
+
+        if (!$event->isValid) {
+            throw new GatewayRequestCancelledException(Craft::t('commerce', 'The gateway request was cancelled!'));
+        }
+
+        $response = $this->sendRequest($request);
+
+        return $this->prepareResponse($response);
+    }
 
     /**
      * @inheritdoc
@@ -171,7 +446,7 @@ abstract class Gateway extends BaseGateway
     /**
      * @inheritdoc
      */
-    protected function prepareCompleteAuthorizeRequest($request)
+    protected function prepareCompleteAuthorizeRequest($request): AbstractRequest
     {
         /** @var AbstractRequest $completeRequest */
         $completeRequest = $this->gateway()->completeAuthorize($request);
@@ -182,7 +457,7 @@ abstract class Gateway extends BaseGateway
     /**
      * @inheritdoc
      */
-    protected function prepareCompletePurchaseRequest($request)
+    protected function prepareCompletePurchaseRequest($request): AbstractRequest
     {
         /** @var AbstractRequest $completeRequest */
         $completeRequest = $this->gateway()->completePurchase($request);
@@ -255,53 +530,5 @@ abstract class Gateway extends BaseGateway
         }
 
         return $request->send();
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function supportsAuthorize(): bool
-    {
-        return $this->gateway()->supportsAuthorize();
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function supportsCapture(): bool
-    {
-        return $this->gateway()->supportsCapture();
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function supportsCompleteAuthorize(): bool
-    {
-        return $this->gateway()->supportsCompleteAuthorize();
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function supportsCompletePurchase(): bool
-    {
-        return $this->gateway()->supportsCompletePurchase();
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function supportsPurchase(): bool
-    {
-        return $this->gateway()->supportsPurchase();
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function supportsRefund(): bool
-    {
-        return $this->gateway()->supportsRefund();
     }
 }

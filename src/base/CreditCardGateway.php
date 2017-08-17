@@ -20,7 +20,7 @@ abstract class CreditCardGateway extends Gateway
     /**
      * @inheritdoc
      */
-    protected function getRequest(Transaction $transaction, BasePaymentForm $form = null)
+    protected function createRequest(Transaction $transaction, BasePaymentForm $form = null)
     {
         // For authorize and capture we're referring to a transaction that already took place so no card or item shenanigans.
         if (in_array($transaction->type, [TransactionRecord::TYPE_REFUND, TransactionRecord::TYPE_CAPTURE], false)) {
