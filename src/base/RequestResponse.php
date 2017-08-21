@@ -100,7 +100,7 @@ class RequestResponse implements RequestResponseInterface
      */
     public function getData()
     {
-        $this->_response->getData();
+        return $this->_response->getData();
     }
 
 
