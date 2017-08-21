@@ -38,7 +38,7 @@ trait OffsiteGatewayTrait
 
         $params = array_merge($defaults, $params);
 
-        return Craft::$app->getView()->renderTemplate('commerce/_components/gateways/common/creditCardPaymentForm', $params);
+        return Craft::$app->getView()->renderTemplate('commerce/_components/gateways/common/offsitePaymentForm', $params);
     }
 
     /**
