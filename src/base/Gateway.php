@@ -17,6 +17,7 @@ use craft\commerce\models\Transaction;
 use craft\commerce\Plugin;
 use craft\errors\GatewayRequestCancelledException;
 use craft\helpers\UrlHelper;
+use craft\web\Response;
 use Omnipay\Common\AbstractGateway;
 use Omnipay\Common\CreditCard;
 use Omnipay\Common\ItemBag;
@@ -108,6 +109,14 @@ abstract class Gateway extends BaseGateway
     abstract public function populateRequest(array &$request, BasePaymentForm $form = null);
 
     /**
+     * @inheritdoc
+     */
+    public function processWebHook(): string
+    {
+        return null;
+    }
+
+    /**
      * @inheritdocs
      */
     public function purchase(Transaction $transaction, BasePaymentForm $form): RequestResponseInterface
@@ -183,6 +192,14 @@ abstract class Gateway extends BaseGateway
     public function supportsRefund(): bool
     {
         return $this->gateway()->supportsRefund();
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function supportsWebhooks(): bool
+    {
+        return false;
     }
 
     // Protected Methods
