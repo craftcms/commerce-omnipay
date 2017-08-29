@@ -258,12 +258,8 @@ abstract class Gateway extends BaseGateway
         // For now, the standard paymentComplete handler is the default unless the gateway has been tested with our acceptNotification handler.
         // TODO: move the handler logic into the gateway adapter itself if the Omnipay v2 interface cannot standardise.
         // TODO: It was moved. What now?
-        if ($this->useNotifyUrl()) {
-            $request['notifyUrl'] = UrlHelper::actionUrl('commerce/payments/accept-notification', ['commerceTransactionId' => $transaction->id, 'commerceTransactionHash' => $transaction->hash]);
-            unset($request['returnUrl']);
-        } else {
-            $request['notifyUrl'] = $request['returnUrl'];
-        }
+    
+        $request['notifyUrl'] = $request['returnUrl'];
 
         // Do not use IPv6 loopback
         if ($request['clientIp'] ===  '::1') {
