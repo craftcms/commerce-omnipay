@@ -31,14 +31,7 @@ trait OffsiteGatewayTrait
      */
     public function getPaymentFormHtml(array $params)
     {
-        $defaults = [
-            'gateway' => $this,
-            'paymentForm' => $this->getPaymentFormModel()
-        ];
-
-        $params = array_merge($defaults, $params);
-
-        return Craft::$app->getView()->renderTemplate('commerce/_components/gateways/common/offsitePaymentForm', $params);
+        return '';
     }
 
     /**
