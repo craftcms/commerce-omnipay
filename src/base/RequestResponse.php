@@ -34,6 +34,14 @@ class RequestResponse implements RequestResponseInterface
     /**
      * @inheritdoc
      */
+    public function isProcessing(): bool
+    {
+        return false;
+    }
+
+    /**
+     * @inheritdoc
+     */
     public function isRedirect(): bool
     {
         return $this->_response->isRedirect();
