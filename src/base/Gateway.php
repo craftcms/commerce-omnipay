@@ -17,7 +17,7 @@ use craft\commerce\models\Transaction;
 use craft\commerce\Plugin;
 use craft\errors\GatewayRequestCancelledException;
 use craft\helpers\UrlHelper;
-use craft\web\Response;
+use craft\web\Response as WebResponse;
 use Omnipay\Common\AbstractGateway;
 use Omnipay\Common\CreditCard;
 use Omnipay\Common\ItemBag;
@@ -111,7 +111,7 @@ abstract class Gateway extends BaseGateway
     /**
      * @inheritdoc
      */
-    public function processWebHook(): string
+    public function processWebHook(): WebResponse
     {
         return null;
     }
