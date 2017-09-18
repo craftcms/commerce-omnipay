@@ -3,8 +3,7 @@
 namespace craft\commerce\omnipay\base;
 
 use craft\commerce\models\payments\BasePaymentForm;
-use craft\commerce\models\Transaction;
-use craft\commerce\records\Transaction as TransactionRecord;
+use craft\commerce\models\payments\OffsitePaymentForm;
 
 /**
  * @author    Pixel & Tonic, Inc. <support@pixelandtonic.com>
@@ -12,23 +11,26 @@ use craft\commerce\records\Transaction as TransactionRecord;
  */
 abstract class OffsiteGateway extends Gateway
 {
-    use OffsiteGatewayTrait;
+    /**
+     * @inheritdoc
+     */
+    public function getPaymentFormModel()
+    {
+        return new OffsitePaymentForm();
+    }
 
     /**
      * @inheritdoc
      */
-    protected function createRequest(Transaction $transaction, BasePaymentForm $form = null)
+    public function getPaymentFormHtml(array $params)
     {
-        // For authorize and capture we're referring to a transaction that already took place so no card or item shenanigans.
-        if (in_array($transaction->type, [TransactionRecord::TYPE_REFUND, TransactionRecord::TYPE_CAPTURE], false)) {
-            $request = $this->createPaymentRequest($transaction);
-        } else {
-            $order = $transaction->getOrder();
-            $itemBag = $this->getItemBagForOrder($order);
-            $request = $this->createPaymentRequest($transaction, null, $itemBag);
-            $this->populateRequest($request, $form);
-        }
+        return '';
+    }
 
-        return $request;
+    /**
+     * @inheritdoc
+     */
+    public function populateRequest(array &$request, BasePaymentForm $paymentForm = null)
+    {
     }
 }

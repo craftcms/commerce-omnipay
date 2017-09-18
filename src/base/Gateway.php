@@ -13,7 +13,9 @@ use craft\commerce\helpers\Currency;
 use craft\commerce\models\LineItem;
 use craft\commerce\models\OrderAdjustment;
 use craft\commerce\models\payments\BasePaymentForm;
+use craft\commerce\models\payments\CreditCardPaymentForm;
 use craft\commerce\models\Transaction;
+use craft\commerce\records\Transaction as TransactionRecord;
 use craft\commerce\Plugin;
 use craft\errors\GatewayRequestCancelledException;
 use craft\helpers\UrlHelper;
@@ -96,6 +98,98 @@ abstract class Gateway extends BaseGateway
         $completeRequest = $this->prepareCompletePurchaseRequest($request);
 
         return $this->performRequest($completeRequest, $transaction);
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function createCard(Order $order, BasePaymentForm $paymentForm): CreditCard {
+
+        $card = new CreditCard;
+
+        if ($paymentForm instanceof CreditCardPaymentForm) {
+            $this->populateCard($card, $paymentForm);
+        }
+        
+        if ($order->billingAddressId) {
+            $billingAddress = $order->billingAddress;
+            if ($billingAddress) {
+                // Set top level names to the billing names
+                $card->setFirstName($billingAddress->firstName);
+                $card->setLastName($billingAddress->lastName);
+
+                $card->setBillingFirstName($billingAddress->firstName);
+                $card->setBillingLastName($billingAddress->lastName);
+                $card->setBillingAddress1($billingAddress->address1);
+                $card->setBillingAddress2($billingAddress->address2);
+                $card->setBillingCity($billingAddress->city);
+                $card->setBillingPostcode($billingAddress->zipCode);
+                if ($billingAddress->getCountry()) {
+                    $card->setBillingCountry($billingAddress->getCountry()->iso);
+                }
+                if ($billingAddress->getState()) {
+                    $state = $billingAddress->getState()->abbreviation ?: $billingAddress->getState()->name;
+                    $card->setBillingState($state);
+                } else {
+                    $card->setBillingState($billingAddress->getStateText());
+                }
+                $card->setBillingPhone($billingAddress->phone);
+                $card->setBillingCompany($billingAddress->businessName);
+                $card->setCompany($billingAddress->businessName);
+            }
+        }
+
+        if ($order->shippingAddressId) {
+            $shippingAddress = $order->shippingAddress;
+            if ($shippingAddress) {
+                $card->setShippingFirstName($shippingAddress->firstName);
+                $card->setShippingLastName($shippingAddress->lastName);
+                $card->setShippingAddress1($shippingAddress->address1);
+                $card->setShippingAddress2($shippingAddress->address2);
+                $card->setShippingCity($shippingAddress->city);
+                $card->setShippingPostcode($shippingAddress->zipCode);
+
+                if ($shippingAddress->getCountry()) {
+                    $card->setShippingCountry($shippingAddress->getCountry()->iso);
+                }
+
+                if ($shippingAddress->getState()) {
+                    $state = $shippingAddress->getState()->abbreviation ?: $shippingAddress->getState()->name;
+                    $card->setShippingState($state);
+                } else {
+                    $card->setShippingState($shippingAddress->getStateText());
+                }
+
+                $card->setShippingPhone($shippingAddress->phone);
+                $card->setShippingCompany($shippingAddress->businessName);
+            }
+        }
+
+        $card->setEmail($order->email);
+
+        return $card;
+    }
+
+    /**
+     * Populate a credit card from the paymnent form.
+     *
+     * @param CreditCard            $card        The credit card to populate.
+     * @param CreditCardPaymentForm $paymentForm The payment form.
+     *                                    
+     * @return void
+     */
+    public function populateCard($card, CreditCardPaymentForm $paymentForm)
+    {
+        if (!$card instanceof CreditCard) {
+            return;
+        }
+
+        $card->setFirstName($paymentForm->firstName);
+        $card->setLastName($paymentForm->lastName);
+        $card->setNumber($paymentForm->number);
+        $card->setExpiryMonth($paymentForm->month);
+        $card->setExpiryYear($paymentForm->year);
+        $card->setCvv($paymentForm->cvv);
     }
 
     /**
@@ -242,24 +336,20 @@ abstract class Gateway extends BaseGateway
      */
     protected function createPaymentRequest(Transaction $transaction, $card = null, $itemBag = null): array
     {
+        $params = ['commerceTransactionId' => $transaction->id, 'commerceTransactionHash' => $transaction->hash];
         $request = [
             'amount' => $transaction->paymentAmount,
             'currency' => $transaction->paymentCurrency,
-            'transactionId' => $transaction->id,
+            'transactionId' => $transaction->hash,
             'description' => Craft::t('commerce', 'Order').' #'.$transaction->orderId,
             'clientIp' => Craft::$app->getRequest()->userIP,
             'transactionReference' => $transaction->hash,
-            'returnUrl' => UrlHelper::actionUrl('commerce/payments/complete-payment', ['commerceTransactionId' => $transaction->id, 'commerceTransactionHash' => $transaction->hash]),
+            'returnUrl' => UrlHelper::actionUrl('commerce/payments/complete-payment', $params),
             'cancelUrl' => UrlHelper::siteUrl($transaction->order->cancelUrl),
         ];
 
-        // Each gateway adapter needs to know whether to use our acceptNotification handler because most omnipay gateways
-        // implement the notification API differently. Hoping Omnipay v3 will improve this.
-        // For now, the standard paymentComplete handler is the default unless the gateway has been tested with our acceptNotification handler.
-        // TODO: move the handler logic into the gateway adapter itself if the Omnipay v2 interface cannot standardise.
-        // TODO: It was moved. What now?
-    
-        $request['notifyUrl'] = $request['returnUrl'];
+        // Set the webhook url.
+        $request['notifyUrl'] = $this->supportsWebhooks() ? $this->getWebhookUrl($params) : $request['returnUrl'];
 
         // Do not use IPv6 loopback
         if ($request['clientIp'] ===  '::1') {
@@ -298,7 +388,28 @@ abstract class Gateway extends BaseGateway
      *
      * @return mixed
      */
-    abstract protected function createRequest(Transaction $transaction, BasePaymentForm $form = null);
+    protected function createRequest(Transaction $transaction, BasePaymentForm $form = null)
+    {
+        // For authorize and capture we're referring to a transaction that already took place so no card or item shenanigans.
+        if (in_array($transaction->type, [TransactionRecord::TYPE_REFUND, TransactionRecord::TYPE_CAPTURE], false)) {
+            $request = $this->createPaymentRequest($transaction);
+        } else {
+            $order = $transaction->getOrder();
+
+            $card = null;
+
+            if ($form) {
+                $card = $this->createCard($order, $form);
+            }
+
+            $itemBag = $this->getItemBagForOrder($order);
+
+            $request = $this->createPaymentRequest($transaction, $card, $itemBag);
+            $this->populateRequest($request, $form);
+        }
+
+        return $request;
+    }
 
     /**
      * @return AbstractGateway
