@@ -16,7 +16,6 @@ use craft\commerce\models\payments\BasePaymentForm;
 use craft\commerce\models\payments\CreditCardPaymentForm;
 use craft\commerce\models\Transaction;
 use craft\commerce\records\Transaction as TransactionRecord;
-use craft\commerce\Plugin;
 use craft\errors\GatewayRequestCancelledException;
 use craft\helpers\UrlHelper;
 use craft\web\Response as WebResponse;
@@ -29,6 +28,7 @@ use Omnipay\Common\Message\RequestInterface;
 use Omnipay\Common\Message\ResponseInterface;
 use yii\base\NotSupportedException;
 
+// TODO a lot of the inheritdocs are not inheritable.
 /**
  * @author    Pixel & Tonic, Inc. <support@pixelandtonic.com>
  * @since     1.0
@@ -337,6 +337,7 @@ abstract class Gateway extends BaseGateway
     protected function createPaymentRequest(Transaction $transaction, $card = null, $itemBag = null): array
     {
         $params = ['commerceTransactionId' => $transaction->id, 'commerceTransactionHash' => $transaction->hash];
+
         $request = [
             'amount' => $transaction->paymentAmount,
             'currency' => $transaction->paymentCurrency,
@@ -556,7 +557,7 @@ abstract class Gateway extends BaseGateway
 
         $response = $this->sendRequest($request);
 
-        return $this->prepareResponse($response);
+        return $this->prepareResponse($response, $transaction);
     }
 
     /**
@@ -612,10 +613,10 @@ abstract class Gateway extends BaseGateway
     /**
      * @inheritdoc
      */
-    protected function prepareResponse($response): RequestResponseInterface
+    protected function prepareResponse($response, Transaction $transaction): RequestResponseInterface
     {
         /** @var AbstractResponse $response */
-        return new RequestResponse($response);
+        return new RequestResponse($response, $transaction);
     }
 
     /**
@@ -644,8 +645,7 @@ abstract class Gateway extends BaseGateway
         ]);
 
         // Raise 'beforeSendPaymentRequest' event
-        $payments = Plugin::getInstance()->getPayments();
-        $payments->trigger($payments::EVENT_BEFORE_SEND_PAYMENT_REQUEST, $event);
+        $this->trigger(self::EVENT_BEFORE_SEND_PAYMENT_REQUEST, $event);
 
         // We can't merge the $data with $modifiedData since the $data is not always an array.
         // For example it could be a XML object, json, or anything else really.

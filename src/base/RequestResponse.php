@@ -4,6 +4,7 @@ namespace craft\commerce\omnipay\base;
 
 use Craft;
 use craft\commerce\base\RequestResponseInterface;
+use craft\commerce\models\Transaction;
 use Omnipay\Common\Message\AbstractResponse;
 use Omnipay\Common\Message\ResponseInterface;
 
@@ -16,11 +17,17 @@ class RequestResponse implements RequestResponseInterface
     /**
      * @var AbstractResponse
      */
-    private $_response;
+    protected $response;
 
-    public function __construct(AbstractResponse $response)
+    /**
+     * @var Transaction
+     */
+    protected $transaction;
+
+    public function __construct(AbstractResponse $response, Transaction $transaction)
     {
-        $this->_response = $response;
+        $this->response = $response;
+        $this->transaction = $transaction;
     }
 
     /**
@@ -28,7 +35,7 @@ class RequestResponse implements RequestResponseInterface
      */
     public function isSuccessful(): bool
     {
-        return $this->_response->isSuccessful();
+        return $this->response->isSuccessful();
     }
 
     /**
@@ -44,7 +51,7 @@ class RequestResponse implements RequestResponseInterface
      */
     public function isRedirect(): bool
     {
-        return $this->_response->isRedirect();
+        return $this->response->isRedirect();
     }
 
     /**
@@ -52,7 +59,7 @@ class RequestResponse implements RequestResponseInterface
      */
     public function getRedirectMethod()
     {
-        return $this->_response->getRedirectMethod();
+        return $this->response->getRedirectMethod();
     }
 
     /**
@@ -60,7 +67,7 @@ class RequestResponse implements RequestResponseInterface
      */
     public function getRedirectData()
     {
-        return $this->_response->getRedirectData();
+        return $this->response->getRedirectData();
     }
 
     /**
@@ -68,7 +75,7 @@ class RequestResponse implements RequestResponseInterface
      */
     public function getRedirectUrl()
     {
-        return $this->_response->getRedirectUrl();
+        return $this->response->getRedirectUrl();
     }
 
     /**
@@ -76,7 +83,7 @@ class RequestResponse implements RequestResponseInterface
      */
     public function getTransactionReference()
     {
-        return $this->_response->getTransactionReference();
+        return $this->response->getTransactionReference();
     }
 
     /**
@@ -84,7 +91,7 @@ class RequestResponse implements RequestResponseInterface
      */
     public function getCode()
     {
-        return $this->_response->getCode();
+        return $this->response->getCode();
     }
 
     /**
@@ -92,7 +99,7 @@ class RequestResponse implements RequestResponseInterface
      */
     public function getMessage()
     {
-        return $this->_response->getMessage();
+        return $this->response->getMessage();
     }
 
     /**
@@ -100,7 +107,7 @@ class RequestResponse implements RequestResponseInterface
      */
     public function redirect()
     {
-        $this->_response->redirect();
+        $this->response->redirect();
     }
 
     /**
@@ -108,7 +115,7 @@ class RequestResponse implements RequestResponseInterface
      */
     public function getData()
     {
-        return $this->_response->getData();
+        return $this->response->getData();
     }
 
 
