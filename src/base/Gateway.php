@@ -28,7 +28,6 @@ use Omnipay\Common\Message\RequestInterface;
 use Omnipay\Common\Message\ResponseInterface;
 use yii\base\NotSupportedException;
 
-// TODO a lot of the inheritdocs are not inheritable.
 /**
  * @author    Pixel & Tonic, Inc. <support@pixelandtonic.com>
  * @since     1.0
@@ -101,7 +100,12 @@ abstract class Gateway extends BaseGateway
     }
 
     /**
-     * @inheritdoc
+     * Create a card object using the order and the payment form.
+     *
+     * @param Order           $order
+     * @param BasePaymentForm $paymentForm
+     *
+     * @return CreditCard
      */
     public function createCard(Order $order, BasePaymentForm $paymentForm): CreditCard {
 
@@ -561,37 +565,48 @@ abstract class Gateway extends BaseGateway
     }
 
     /**
-     * @inheritdoc
+     * Prepare an authorization request from request data.
+     *
+     * @param array $request
+     *
+     * @return RequestInterface
      */
-    protected function prepareAuthorizeRequest($request): RequestInterface
+    protected function prepareAuthorizeRequest(array $request): RequestInterface
     {
         return $this->gateway()->authorize($request);
     }
 
     /**
-     * @inheritdoc
+     * Prepare a complete authorization request from request data.
+     *
+     * @param array $request
+     *
+     * @return RequestInterface
      */
-    protected function prepareCompleteAuthorizeRequest($request): AbstractRequest
+    protected function prepareCompleteAuthorizeRequest($request): RequestInterface
     {
-        /** @var AbstractRequest $completeRequest */
-        $completeRequest = $this->gateway()->completeAuthorize($request);
-
-        return $completeRequest;
+        return $this->gateway()->completeAuthorize($request);
     }
 
     /**
-     * @inheritdoc
+     * Prepare a complete purchase request from request data.
+     *
+     * @param array $request
+     *
+     * @return RequestInterface
      */
-    protected function prepareCompletePurchaseRequest($request): AbstractRequest
+    protected function prepareCompletePurchaseRequest($request): RequestInterface
     {
-        /** @var AbstractRequest $completeRequest */
-        $completeRequest = $this->gateway()->completePurchase($request);
-
-        return $completeRequest;
+        return $this->gateway()->completePurchase($request);
     }
 
     /**
-     * @inheritdoc
+     * Prepare a capture request from request data and reference of the transaction being captured.
+     *
+     * @param array  $request
+     * @param string $reference
+     *
+     * @return RequestInterface
      */
     protected function prepareCaptureRequest($request, string $reference): RequestInterface
     {
@@ -603,7 +618,11 @@ abstract class Gateway extends BaseGateway
     }
 
     /**
-     * @inheritdoc
+     * Prepare a purchase request from request data.
+     *
+     * @param array $request
+     *
+     * @return RequestInterface
      */
     protected function preparePurchaseRequest($request): RequestInterface
     {
@@ -611,16 +630,26 @@ abstract class Gateway extends BaseGateway
     }
 
     /**
-     * @inheritdoc
+     * Prepare a Commerce response from the gateway response and the transaction that was the base for the request.
+     *
+     * @param ResponseInterface $response
+     * @param Transaction $transaction
+     *
+     * @return RequestResponseInterface
      */
-    protected function prepareResponse($response, Transaction $transaction): RequestResponseInterface
+    protected function prepareResponse(ResponseInterface $response, Transaction $transaction): RequestResponseInterface
     {
         /** @var AbstractResponse $response */
         return new RequestResponse($response, $transaction);
     }
 
     /**
-     * @inheritdoc
+     * Prepare a refund request from request data and reference of the transaction being refunded.
+     *
+     * @param array  $request
+     * @param string $reference
+     *
+     * @return RequestInterface
      */
     protected function prepareRefundRequest($request, string $reference): RequestInterface
     {
@@ -633,11 +662,14 @@ abstract class Gateway extends BaseGateway
     }
 
     /**
-     * @inheritdoc
+     * Send a request to the actual gateway.
+     *
+     * @param RequestInterface$request
+     *
+     * @return ResponseInterface
      */
-    protected function sendRequest($request): ResponseInterface
+    protected function sendRequest(RequestInterface $request): ResponseInterface
     {
-        /** @var RequestInterface $request */
         $data = $request->getData();
 
         $event = new SendPaymentRequestEvent([
