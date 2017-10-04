@@ -16,7 +16,7 @@ use craft\commerce\models\payments\BasePaymentForm;
 use craft\commerce\models\payments\CreditCardPaymentForm;
 use craft\commerce\models\Transaction;
 use craft\commerce\records\Transaction as TransactionRecord;
-use craft\errors\GatewayRequestCancelledException;
+use craft\commerce\errors\GatewayRequestCancelledException;
 use craft\helpers\UrlHelper;
 use craft\web\Response as WebResponse;
 use Omnipay\Common\AbstractGateway;
