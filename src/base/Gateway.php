@@ -6,6 +6,7 @@ use Craft;
 use craft\commerce\base\Gateway as BaseGateway;
 use craft\commerce\base\RequestResponseInterface;
 use craft\commerce\elements\Order;
+use craft\commerce\errors\NotImplementedException;
 use craft\commerce\events\GatewayRequestEvent;
 use craft\commerce\events\ItemBagEvent;
 use craft\commerce\events\SendPaymentRequestEvent;
@@ -14,6 +15,7 @@ use craft\commerce\models\LineItem;
 use craft\commerce\models\OrderAdjustment;
 use craft\commerce\models\payments\BasePaymentForm;
 use craft\commerce\models\payments\CreditCardPaymentForm;
+use craft\commerce\models\PaymentSource;
 use craft\commerce\models\Transaction;
 use craft\commerce\records\Transaction as TransactionRecord;
 use craft\commerce\errors\GatewayRequestCancelledException;
@@ -175,6 +177,31 @@ abstract class Gateway extends BaseGateway
     }
 
     /**
+     * @inheritdoc
+     */
+    public function createPaymentSource($sourceData): PaymentSource
+    {
+        if (!$this->supportsPaymentSources()) {
+            throw new NotSupportedException(Craft::t('commerce', 'Payment sources are not supported by this gateway'));
+        }
+
+        throw new NotImplementedException();
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function deletePaymentSource($token)
+    {
+        if (!$this->supportsPaymentSources()) {
+            throw new NotSupportedException(Craft::t('commerce', 'Payment sources are not supported by this gateway'));
+        }
+
+        throw new NotImplementedException();
+    }
+
+
+    /**
      * Populate a credit card from the paymnent form.
      *
      * @param CreditCard            $card        The credit card to populate.
@@ -274,6 +301,14 @@ abstract class Gateway extends BaseGateway
     public function supportsCompletePurchase(): bool
     {
         return $this->gateway()->supportsCompletePurchase();
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function supportsPaymentSources(): bool
+    {
+        return $this->gateway()->supportsCreateCard() && $this->gateway()->supportsDeleteCard();
     }
 
     /**
