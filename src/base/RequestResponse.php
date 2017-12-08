@@ -57,15 +57,15 @@ class RequestResponse implements RequestResponseInterface
     /**
      * @inheritdoc
      */
-    public function getRedirectMethod()
+    public function getRedirectMethod(): string
     {
-        return $this->response->getRedirectMethod();
+        return (string) $this->response->getRedirectMethod();
     }
 
     /**
      * @inheritdoc
      */
-    public function getRedirectData()
+    public function getRedirectData(): array
     {
         return $this->response->getRedirectData();
     }
@@ -73,33 +73,33 @@ class RequestResponse implements RequestResponseInterface
     /**
      * @inheritdoc
      */
-    public function getRedirectUrl()
+    public function getRedirectUrl(): string
     {
-        return $this->response->getRedirectUrl();
+        return (string) $this->response->getRedirectUrl();
     }
 
     /**
      * @inheritdoc
      */
-    public function getTransactionReference()
+    public function getTransactionReference(): string
     {
-        return $this->response->getTransactionReference();
+        return (string) $this->response->getTransactionReference();
     }
 
     /**
      * @inheritdoc
      */
-    public function getCode()
+    public function getCode(): string
     {
-        return $this->response->getCode();
+        return (string)$this->response->getCode();
     }
 
     /**
      * @inheritdoc
      */
-    public function getMessage()
+    public function getMessage(): string
     {
-        return $this->response->getMessage();
+        return (string) $this->response->getMessage();
     }
 
     /**
