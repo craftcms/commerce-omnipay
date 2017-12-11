@@ -180,7 +180,7 @@ abstract class Gateway extends BaseGateway
     /**
      * @inheritdoc
      */
-    public function createPaymentSource($sourceData): PaymentSource
+    public function createPaymentSource(BasePaymentForm $sourceData): PaymentSource
     {
         if (!$this->supportsPaymentSources()) {
             throw new NotSupportedException(Craft::t('commerce', 'Payment sources are not supported by this gateway'));
