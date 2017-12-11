@@ -7,6 +7,7 @@ use craft\commerce\base\Gateway as BaseGateway;
 use craft\commerce\base\Purchasable;
 use craft\commerce\base\RequestResponseInterface;
 use craft\commerce\elements\Order;
+use craft\commerce\errors\GatewayRequestCancelledException;
 use craft\commerce\errors\NotImplementedException;
 use craft\commerce\events\GatewayRequestEvent;
 use craft\commerce\events\ItemBagEvent;
@@ -18,8 +19,8 @@ use craft\commerce\models\payments\BasePaymentForm;
 use craft\commerce\models\payments\CreditCardPaymentForm;
 use craft\commerce\models\PaymentSource;
 use craft\commerce\models\Transaction;
+use craft\commerce\Plugin as Commerce;
 use craft\commerce\records\Transaction as TransactionRecord;
-use craft\commerce\errors\GatewayRequestCancelledException;
 use craft\helpers\UrlHelper;
 use craft\web\Response as WebResponse;
 use Omnipay\Common\AbstractGateway;
@@ -184,7 +185,46 @@ abstract class Gateway extends BaseGateway
             throw new NotSupportedException(Craft::t('commerce', 'Payment sources are not supported by this gateway'));
         }
 
-        throw new NotImplementedException();
+        $user = Craft::$app->getUser();
+
+        if ($user->isGuest) {
+            $user->loginRequired();
+        }
+
+        $cart = Commerce::getInstance()->getCart()->getCart();
+
+        if (!$address = $cart->getBillingAddress()) {
+            $customer = Commerce::getInstance()->getCustomers()->getCustomerByUserId($user->getId());
+
+            if (!$customer || !($address = $customer->getLastUsedBillingAddress())) {
+                throw new NotSupportedException(Craft::t('commerce', 'You need a billing address to save a payment source.'));
+            }
+
+            $cart->setBillingAddress($address);
+            $cart->billingAddressId = $address->id;
+        }
+
+        $card = $this->createCard($sourceData, $cart);
+
+        $createCardRequest = $this->gateway()->createCard(['card' => $card]);
+
+        $response = $this->sendRequest($createCardRequest);
+
+        if ($response->isSuccessful())
+        {
+            $token = $response->getTransactionReference();
+
+            $paymentSource = new PaymentSource([
+                'userId' => $user->getId(),
+                'gatewayId' => $this->id,
+                'token' => $response->getTransactionReference(),
+                'response' => $response->getData(),
+                'description' => $this->extractPaymentSourceDescription($response)
+            ]);
+
+            return $paymentSource;
+        }
+
     }
 
     /**
@@ -198,7 +238,6 @@ abstract class Gateway extends BaseGateway
 
         throw new NotImplementedException();
     }
-
 
     /**
      * Populate a credit card from the paymnent form.
@@ -449,6 +488,18 @@ abstract class Gateway extends BaseGateway
 
         return $request;
     }
+
+    /**
+     * Extract a payment source description from a response.
+     *
+     * @param ResponseInterface $response
+     *
+     * @return string
+     */
+     protected function extractPaymentSourceDescription(ResponseInterface $response): string
+     {
+         return 'Payment source';
+     }
 
     /**
      * @return AbstractGateway
