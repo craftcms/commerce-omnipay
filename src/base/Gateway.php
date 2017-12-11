@@ -138,8 +138,6 @@ abstract class Gateway extends BaseGateway
                     if ($billingAddress->getState()) {
                         $state = $billingAddress->getState()->abbreviation ?: $billingAddress->getState()->name;
                         $card->setBillingState($state);
-                    } else {
-                        $card->setBillingState($billingAddress->getStateText());
                     }
                     $card->setBillingPhone($billingAddress->phone);
                     $card->setBillingCompany($billingAddress->businessName);
@@ -164,8 +162,6 @@ abstract class Gateway extends BaseGateway
                     if ($shippingAddress->getState()) {
                         $state = $shippingAddress->getState()->abbreviation ?: $shippingAddress->getState()->name;
                         $card->setShippingState($state);
-                    } else {
-                        $card->setShippingState($shippingAddress->getStateText());
                     }
 
                     $card->setShippingPhone($shippingAddress->phone);
