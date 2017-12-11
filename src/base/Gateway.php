@@ -4,6 +4,7 @@ namespace craft\commerce\omnipay\base;
 
 use Craft;
 use craft\commerce\base\Gateway as BaseGateway;
+use craft\commerce\base\Purchasable;
 use craft\commerce\base\RequestResponseInterface;
 use craft\commerce\elements\Order;
 use craft\commerce\errors\NotImplementedException;
@@ -505,6 +506,7 @@ abstract class Gateway extends BaseGateway
      * @param Order $order
      *
      * @return array
+     * @throws \yii\base\InvalidConfigException
      */
     protected function getItemListForOrder(Order $order): array
     {
