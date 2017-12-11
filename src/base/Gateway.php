@@ -103,76 +103,78 @@ abstract class Gateway extends BaseGateway
     }
 
     /**
-     * Create a card object using the order and the payment form.
+     * Create a card object using the payment form and the optional order
      *
-     * @param Order           $order
      * @param BasePaymentForm $paymentForm
+     * @param Order           $order
      *
      * @return CreditCard
      */
-    public function createCard(Order $order, BasePaymentForm $paymentForm): CreditCard {
+    public function createCard(BasePaymentForm $paymentForm, Order $order = null): CreditCard {
 
         $card = new CreditCard;
 
         if ($paymentForm instanceof CreditCardPaymentForm) {
             $this->populateCard($card, $paymentForm);
         }
-        
-        if ($order->billingAddressId) {
-            $billingAddress = $order->billingAddress;
-            if ($billingAddress) {
-                // Set top level names to the billing names
-                $card->setFirstName($billingAddress->firstName);
-                $card->setLastName($billingAddress->lastName);
 
-                $card->setBillingFirstName($billingAddress->firstName);
-                $card->setBillingLastName($billingAddress->lastName);
-                $card->setBillingAddress1($billingAddress->address1);
-                $card->setBillingAddress2($billingAddress->address2);
-                $card->setBillingCity($billingAddress->city);
-                $card->setBillingPostcode($billingAddress->zipCode);
-                if ($billingAddress->getCountry()) {
-                    $card->setBillingCountry($billingAddress->getCountry()->iso);
+        if ($order) {
+            if ($order->billingAddressId) {
+                $billingAddress = $order->billingAddress;
+                if ($billingAddress) {
+                    // Set top level names to the billing names
+                    $card->setFirstName($billingAddress->firstName);
+                    $card->setLastName($billingAddress->lastName);
+
+                    $card->setBillingFirstName($billingAddress->firstName);
+                    $card->setBillingLastName($billingAddress->lastName);
+                    $card->setBillingAddress1($billingAddress->address1);
+                    $card->setBillingAddress2($billingAddress->address2);
+                    $card->setBillingCity($billingAddress->city);
+                    $card->setBillingPostcode($billingAddress->zipCode);
+                    if ($billingAddress->getCountry()) {
+                        $card->setBillingCountry($billingAddress->getCountry()->iso);
+                    }
+                    if ($billingAddress->getState()) {
+                        $state = $billingAddress->getState()->abbreviation ?: $billingAddress->getState()->name;
+                        $card->setBillingState($state);
+                    } else {
+                        $card->setBillingState($billingAddress->getStateText());
+                    }
+                    $card->setBillingPhone($billingAddress->phone);
+                    $card->setBillingCompany($billingAddress->businessName);
+                    $card->setCompany($billingAddress->businessName);
                 }
-                if ($billingAddress->getState()) {
-                    $state = $billingAddress->getState()->abbreviation ?: $billingAddress->getState()->name;
-                    $card->setBillingState($state);
-                } else {
-                    $card->setBillingState($billingAddress->getStateText());
-                }
-                $card->setBillingPhone($billingAddress->phone);
-                $card->setBillingCompany($billingAddress->businessName);
-                $card->setCompany($billingAddress->businessName);
             }
-        }
 
-        if ($order->shippingAddressId) {
-            $shippingAddress = $order->shippingAddress;
-            if ($shippingAddress) {
-                $card->setShippingFirstName($shippingAddress->firstName);
-                $card->setShippingLastName($shippingAddress->lastName);
-                $card->setShippingAddress1($shippingAddress->address1);
-                $card->setShippingAddress2($shippingAddress->address2);
-                $card->setShippingCity($shippingAddress->city);
-                $card->setShippingPostcode($shippingAddress->zipCode);
+            if ($order->shippingAddressId) {
+                $shippingAddress = $order->shippingAddress;
+                if ($shippingAddress) {
+                    $card->setShippingFirstName($shippingAddress->firstName);
+                    $card->setShippingLastName($shippingAddress->lastName);
+                    $card->setShippingAddress1($shippingAddress->address1);
+                    $card->setShippingAddress2($shippingAddress->address2);
+                    $card->setShippingCity($shippingAddress->city);
+                    $card->setShippingPostcode($shippingAddress->zipCode);
 
-                if ($shippingAddress->getCountry()) {
-                    $card->setShippingCountry($shippingAddress->getCountry()->iso);
+                    if ($shippingAddress->getCountry()) {
+                        $card->setShippingCountry($shippingAddress->getCountry()->iso);
+                    }
+
+                    if ($shippingAddress->getState()) {
+                        $state = $shippingAddress->getState()->abbreviation ?: $shippingAddress->getState()->name;
+                        $card->setShippingState($state);
+                    } else {
+                        $card->setShippingState($shippingAddress->getStateText());
+                    }
+
+                    $card->setShippingPhone($shippingAddress->phone);
+                    $card->setShippingCompany($shippingAddress->businessName);
                 }
-
-                if ($shippingAddress->getState()) {
-                    $state = $shippingAddress->getState()->abbreviation ?: $shippingAddress->getState()->name;
-                    $card->setShippingState($state);
-                } else {
-                    $card->setShippingState($shippingAddress->getStateText());
-                }
-
-                $card->setShippingPhone($shippingAddress->phone);
-                $card->setShippingCompany($shippingAddress->businessName);
             }
-        }
 
-        $card->setEmail($order->email);
+            $card->setEmail($order->email);
+        }
 
         return $card;
     }
@@ -440,7 +442,7 @@ abstract class Gateway extends BaseGateway
             $card = null;
 
             if ($form) {
-                $card = $this->createCard($order, $form);
+                $card = $this->createCard($form, $order);
             }
 
             $itemBag = $this->getItemBagForOrder($order);
