@@ -9,6 +9,7 @@ use craft\commerce\base\RequestResponseInterface;
 use craft\commerce\elements\Order;
 use craft\commerce\errors\GatewayRequestCancelledException;
 use craft\commerce\errors\NotImplementedException;
+use craft\commerce\errors\PaymentException;
 use craft\commerce\events\GatewayRequestEvent;
 use craft\commerce\events\ItemBagEvent;
 use craft\commerce\events\SendPaymentRequestEvent;
@@ -120,8 +121,7 @@ abstract class Gateway extends BaseGateway
         }
 
         if ($order) {
-            if ($order->billingAddressId) {
-                $billingAddress = $order->billingAddress;
+            if ($billingAddress = $order->getBillingAddress()) {
                 if ($billingAddress) {
                     // Set top level names to the billing names
                     $card->setFirstName($billingAddress->firstName);
@@ -146,8 +146,7 @@ abstract class Gateway extends BaseGateway
                 }
             }
 
-            if ($order->shippingAddressId) {
-                $shippingAddress = $order->shippingAddress;
+            if ($shippingAddress = $order->getShippingAddress()) {
                 if ($shippingAddress) {
                     $card->setShippingFirstName($shippingAddress->firstName);
                     $card->setShippingLastName($shippingAddress->lastName);
@@ -170,7 +169,7 @@ abstract class Gateway extends BaseGateway
                 }
             }
 
-            $card->setEmail($order->email);
+            $card->setEmail($order->getEmail());
         }
 
         return $card;
@@ -187,7 +186,7 @@ abstract class Gateway extends BaseGateway
 
         $user = Craft::$app->getUser();
 
-        if ($user->isGuest) {
+        if ($user->getIsGuest()) {
             $user->loginRequired();
         }
 
@@ -205,38 +204,42 @@ abstract class Gateway extends BaseGateway
         }
 
         $card = $this->createCard($sourceData, $cart);
+        $request = ['card' => $card];
 
-        $createCardRequest = $this->gateway()->createCard(['card' => $card]);
+        $this->populateRequest($request, $sourceData);
+        $createCardRequest = $this->gateway()->createCard($request);
 
         $response = $this->sendRequest($createCardRequest);
 
-        if ($response->isSuccessful())
-        {
-            $token = $response->getTransactionReference();
+        $paymentSource = new PaymentSource([
+            'userId' => $user->getId(),
+            'gatewayId' => $this->id,
+            'token' => $this->extractCardReference($response),
+            'response' => $response->getData(),
+            'description' => $this->extractPaymentSourceDescription($response)
+        ]);
 
-            $paymentSource = new PaymentSource([
-                'userId' => $user->getId(),
-                'gatewayId' => $this->id,
-                'token' => $response->getTransactionReference(),
-                'response' => $response->getData(),
-                'description' => $this->extractPaymentSourceDescription($response)
-            ]);
-
-            return $paymentSource;
-        }
-
+        return $paymentSource;
     }
 
     /**
      * @inheritdoc
      */
-    public function deletePaymentSource($token)
+    public function deletePaymentSource($token): bool
     {
         if (!$this->supportsPaymentSources()) {
             throw new NotSupportedException(Craft::t('commerce', 'Payment sources are not supported by this gateway'));
         }
 
-        throw new NotImplementedException();
+        // Some gateways support creating but don't support deleting. Assume deleted, then.
+        if (!$this->gateway()->supportsDeleteCard()) {
+            return true;
+        }
+
+        $deleteCardRequest = $this->gateway()->deleteCard(['cardReference' => $token]);
+        $response = $this->sendRequest($deleteCardRequest);
+
+        return $response->isSuccessful();
     }
 
     /**
@@ -346,7 +349,7 @@ abstract class Gateway extends BaseGateway
      */
     public function supportsPaymentSources(): bool
     {
-        return $this->gateway()->supportsCreateCard() && $this->gateway()->supportsDeleteCard();
+        return $this->gateway()->supportsCreateCard();
     }
 
     /**
@@ -389,6 +392,7 @@ abstract class Gateway extends BaseGateway
      * @param Order $order The order.
      *
      * @return ItemBag
+     * @throws \yii\base\InvalidConfigException
      */
     protected function createItemBagForOrder(Order $order): ItemBag
     {
@@ -410,6 +414,7 @@ abstract class Gateway extends BaseGateway
      * @param ItemBag     $itemBag     The item list.
      *
      * @return array
+     * @throws \yii\base\Exception
      */
     protected function createPaymentRequest(Transaction $transaction, $card = null, $itemBag = null): array
     {
@@ -458,6 +463,7 @@ abstract class Gateway extends BaseGateway
         return $request;
     }
 
+
     /**
      * Prepare a request for execution by transaction and a populated payment form.
      *
@@ -465,6 +471,7 @@ abstract class Gateway extends BaseGateway
      * @param BasePaymentForm $form        Optional for capture/refund requests.
      *
      * @return mixed
+     * @throws \yii\base\Exception
      */
     protected function createRequest(Transaction $transaction, BasePaymentForm $form = null)
     {
@@ -487,6 +494,23 @@ abstract class Gateway extends BaseGateway
         }
 
         return $request;
+    }
+
+    /**
+     * Extract a card reference from a response
+     *
+     * @param ResponseInterface $response The response to use
+     *
+     * @return string
+     * @throws PaymentException on failure
+     */
+    protected function extractCardReference(ResponseInterface $response): string
+    {
+        if (!$response->isSuccessful()) {
+            throw new PaymentException($response->getMessage());
+        }
+
+        return (string) $response->getTransactionReference();
     }
 
     /**
