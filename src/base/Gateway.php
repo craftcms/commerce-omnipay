@@ -39,11 +39,34 @@ use yii\base\NotSupportedException;
  */
 abstract class Gateway extends BaseGateway
 {
+    // Constants
+    // =========================================================================
+    /**
+     * @event ItemBagEvent The event that is triggered after an item bag is created
+     */
+    const EVENT_AFTER_CREATE_ITEM_BAG = 'afterCreateItemBag';
+
+    /**
+     * @event GatewayRequestEvent The event that is triggered before a gateway request is sent
+     *
+     * You may set [[GatewayRequestEvent::isValid]] to `false` to prevent the request from being sent.
+     */
+    const EVENT_BEFORE_GATEWAY_REQUEST_SEND = 'beforeGatewayRequestSend';
+
+    /**
+     * @event SendPaymentRequestEvent The event that is triggered right before a payment request is being sent
+     */
+    const EVENT_BEFORE_SEND_PAYMENT_REQUEST = 'beforeSendPaymentRequest';
+
+    // Properties
+    // =========================================================================
     /**
      * @var AbstractGateway
      */
     private $_gateway;
 
+    // Public methods
+    // =========================================================================
     /**
      * @inheritdocs
      */
@@ -391,7 +414,6 @@ abstract class Gateway extends BaseGateway
      * @param Order $order The order.
      *
      * @return ItemBag
-     * @throws \yii\base\InvalidConfigException
      */
     protected function createItemBagForOrder(Order $order): ItemBag
     {
@@ -578,7 +600,6 @@ abstract class Gateway extends BaseGateway
      * @param Order $order
      *
      * @return array
-     * @throws \yii\base\InvalidConfigException
      */
     protected function getItemListForOrder(Order $order): array
     {
@@ -652,7 +673,7 @@ abstract class Gateway extends BaseGateway
      * @return RequestResponseInterface
      * @throws GatewayRequestCancelledException
      */
-    protected function performRequest($request, $transaction)
+    protected function performRequest($request, $transaction): RequestResponseInterface
     {
         //raising event
         $event = new GatewayRequestEvent([
