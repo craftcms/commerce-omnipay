@@ -122,51 +122,47 @@ abstract class Gateway extends BaseGateway
 
         if ($order) {
             if ($billingAddress = $order->getBillingAddress()) {
-                if ($billingAddress) {
-                    // Set top level names to the billing names
-                    $card->setFirstName($billingAddress->firstName);
-                    $card->setLastName($billingAddress->lastName);
+                // Set top level names to the billing names
+                $card->setFirstName($billingAddress->firstName);
+                $card->setLastName($billingAddress->lastName);
 
-                    $card->setBillingFirstName($billingAddress->firstName);
-                    $card->setBillingLastName($billingAddress->lastName);
-                    $card->setBillingAddress1($billingAddress->address1);
-                    $card->setBillingAddress2($billingAddress->address2);
-                    $card->setBillingCity($billingAddress->city);
-                    $card->setBillingPostcode($billingAddress->zipCode);
-                    if ($billingAddress->getCountry()) {
-                        $card->setBillingCountry($billingAddress->getCountry()->iso);
-                    }
-                    if ($billingAddress->getState()) {
-                        $state = $billingAddress->getState()->abbreviation ?: $billingAddress->getState()->name;
-                        $card->setBillingState($state);
-                    }
-                    $card->setBillingPhone($billingAddress->phone);
-                    $card->setBillingCompany($billingAddress->businessName);
-                    $card->setCompany($billingAddress->businessName);
+                $card->setBillingFirstName($billingAddress->firstName);
+                $card->setBillingLastName($billingAddress->lastName);
+                $card->setBillingAddress1($billingAddress->address1);
+                $card->setBillingAddress2($billingAddress->address2);
+                $card->setBillingCity($billingAddress->city);
+                $card->setBillingPostcode($billingAddress->zipCode);
+                if ($billingAddress->getCountry()) {
+                    $card->setBillingCountry($billingAddress->getCountry()->iso);
                 }
+                if ($billingAddress->getState()) {
+                    $state = $billingAddress->getState()->abbreviation ?: $billingAddress->getState()->name;
+                    $card->setBillingState($state);
+                }
+                $card->setBillingPhone($billingAddress->phone);
+                $card->setBillingCompany($billingAddress->businessName);
+                $card->setCompany($billingAddress->businessName);
             }
 
             if ($shippingAddress = $order->getShippingAddress()) {
-                if ($shippingAddress) {
-                    $card->setShippingFirstName($shippingAddress->firstName);
-                    $card->setShippingLastName($shippingAddress->lastName);
-                    $card->setShippingAddress1($shippingAddress->address1);
-                    $card->setShippingAddress2($shippingAddress->address2);
-                    $card->setShippingCity($shippingAddress->city);
-                    $card->setShippingPostcode($shippingAddress->zipCode);
+                $card->setShippingFirstName($shippingAddress->firstName);
+                $card->setShippingLastName($shippingAddress->lastName);
+                $card->setShippingAddress1($shippingAddress->address1);
+                $card->setShippingAddress2($shippingAddress->address2);
+                $card->setShippingCity($shippingAddress->city);
+                $card->setShippingPostcode($shippingAddress->zipCode);
 
-                    if ($shippingAddress->getCountry()) {
-                        $card->setShippingCountry($shippingAddress->getCountry()->iso);
-                    }
-
-                    if ($shippingAddress->getState()) {
-                        $state = $shippingAddress->getState()->abbreviation ?: $shippingAddress->getState()->name;
-                        $card->setShippingState($state);
-                    }
-
-                    $card->setShippingPhone($shippingAddress->phone);
-                    $card->setShippingCompany($shippingAddress->businessName);
+                if ($shippingAddress->getCountry()) {
+                    $card->setShippingCountry($shippingAddress->getCountry()->iso);
                 }
+
+                if ($shippingAddress->getState()) {
+                    $state = $shippingAddress->getState()->abbreviation ?: $shippingAddress->getState()->name;
+                    $card->setShippingState($state);
+                }
+
+                $card->setShippingPhone($shippingAddress->phone);
+                $card->setShippingCompany($shippingAddress->businessName);
             }
 
             $card->setEmail($order->getEmail());
