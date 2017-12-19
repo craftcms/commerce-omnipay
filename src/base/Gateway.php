@@ -200,7 +200,10 @@ abstract class Gateway extends BaseGateway
         }
 
         $card = $this->createCard($sourceData, $cart);
-        $request = ['card' => $card];
+        $request = [
+            'card' => $card,
+            'currency' => $cart->paymentCurrency,
+        ];
 
         $this->populateRequest($request, $sourceData);
         $createCardRequest = $this->gateway()->createCard($request);
