@@ -835,7 +835,7 @@ abstract class Gateway extends BaseGateway
     /**
      * Send a request to the actual gateway.
      *
-     * @param RequestInterface$request
+     * @param RequestInterface $request
      *
      * @return ResponseInterface
      */
