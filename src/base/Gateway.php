@@ -41,19 +41,61 @@ abstract class Gateway extends BaseGateway
     // Constants
     // =========================================================================
     /**
-     * @event ItemBagEvent The event that is triggered after an item bag is created
+     * @event ItemBagEvent The event that is triggered after an item bag is created.
+     *
+     * This event is useful if you want to perform some additional actions when items are rounded up for an Order or add a line item as the order is being sent to gateway.
+     *
+     * ```php
+     * use craft\commerce\omnipay\events\ItemBagEvent
+     * use craft\commerce\omnipay\base\Gateway as Gateway;
+     * use yii\base\Event;
+     *
+     * Event::on(Gateway::class, Gateway::EVENT_AFTER_CREATE_ITEM_BAG, function(ItemBagEvent $e) {
+     *     // Add a tax line item for 0% VAT
+     *     $e->items[] = ['name' => 'VAT', 'price' => 0.00];
+     * });
+     * ```
      */
     const EVENT_AFTER_CREATE_ITEM_BAG = 'afterCreateItemBag';
 
     /**
-     * @event GatewayRequestEvent The event that is triggered before a gateway request is sent
+     * @event GatewayRequestEvent The event that is triggered before a gateway request is sent.
      *
      * You may set [[GatewayRequestEvent::isValid]] to `false` to prevent the request from being sent.
+     *
+     * This event gives you a chance to do something before a request is being sent to the gateway. If you set the `isValid` property of the event to `true`, the request will be cancelled.
+     *
+     * ```php
+     * use craft\commerce\omnipay\events\GatewayRequestEvent
+     * use craft\commerce\omnipay\base\Gateway as Gateway;
+     * use yii\base\Event;
+     *
+     * Event::on(Gateway::class, Gateway::EVENT_BEFORE_GATEWAY_REQUEST_SEND, function(GatewayRequestEvent $e) {
+     *     if ($e->request['someKey'] === 'someValue') {
+     *         // Prevent the request from going through
+     *         $e->isValid = false;
+     *     }
+     * });
+     * ```
      */
     const EVENT_BEFORE_GATEWAY_REQUEST_SEND = 'beforeGatewayRequestSend';
 
     /**
-     * @event SendPaymentRequestEvent The event that is triggered right before a payment request is being sent
+     * @event SendPaymentRequestEvent The event that is triggered right before a payment request is being sent.
+     *
+     * This event gives plugins a chance to modify the request data as it's being dispatched. To change the request data, you must use the `modifiedRequestData` property.
+     *
+     * ```php
+     * use craft\commerce\omnipay\events\SendPaymentRequestEvent
+     * use craft\commerce\omnipay\base\Gateway as Gateway;
+     * use yii\base\Event;
+     *
+     * Event::on(Gateway::class, Gateway::EVENT_BEFORE_SEND_PAYMENT_REQUEST, function(SendPaymentRequestEvent $e) {
+     *     // Change something.
+     *     $e->modifiedRequestData = $e->requestData;
+     *     $e->modifiedRequestData['endpoint'] = 'myCustomGatewayEndpoint';
+     * });
+     * ```
      */
     const EVENT_BEFORE_SEND_PAYMENT_REQUEST = 'beforeSendPaymentRequest';
 
