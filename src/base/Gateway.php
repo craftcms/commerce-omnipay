@@ -363,14 +363,14 @@ abstract class Gateway extends BaseGateway
     /**
      * @inheritdoc
      */
-    public function refund(Transaction $transaction, string $reference): RequestResponseInterface
+    public function refund(Transaction $transaction, float $amount): RequestResponseInterface
     {
         if (!$this->supportsRefund()) {
             throw new NotSupportedException(Craft::t('commerce', 'Refunding is not supported by this gateway'));
         }
 
         $request = $this->createRequest($transaction);
-        $refundRequest = $this->prepareRefundRequest($request, $reference);
+        $refundRequest = $this->prepareRefundRequest($request, $transaction->reference);
 
         return $this->performRequest($refundRequest, $transaction);
     }
