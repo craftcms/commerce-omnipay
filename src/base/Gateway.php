@@ -410,6 +410,15 @@ abstract class Gateway extends BaseGateway
     /**
      * @inheritdoc
      */
+    public function supportsPartialRefund(): bool
+    {
+        // All of the currently implemented Omnipay gateways support partial refunds.
+        return true;
+    }
+
+    /**
+     * @inheritdoc
+     */
     public function supportsPaymentSources(): bool
     {
         return $this->gateway()->supportsCreateCard();
