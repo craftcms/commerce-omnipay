@@ -463,9 +463,9 @@ abstract class Gateway extends BaseGateway
      *
      * @param Order $order The order.
      *
-     * @return ItemBag
+     * @return ItemBag|null
      */
-    protected function createItemBagForOrder(Order $order): ItemBag
+    protected function createItemBagForOrder(Order $order)
     {
         if (!$this->sendCartInfo) {
             return null;
