@@ -36,7 +36,7 @@ abstract class CreditCardGateway extends Gateway
     /**
      * @inheritdoc
      */
-    public function getPaymentFormModel()
+    public function getPaymentFormModel(): BasePaymentForm
     {
         return new CreditCardPaymentForm();
     }

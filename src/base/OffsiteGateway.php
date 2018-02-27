@@ -14,7 +14,7 @@ abstract class OffsiteGateway extends Gateway
     /**
      * @inheritdoc
      */
-    public function getPaymentFormModel()
+    public function getPaymentFormModel(): BasePaymentForm
     {
         return new OffsitePaymentForm();
     }

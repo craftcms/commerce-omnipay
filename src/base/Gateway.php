@@ -33,6 +33,10 @@ use Omnipay\Common\Message\ResponseInterface;
 use yii\base\NotSupportedException;
 
 /**
+ * Class Gateway
+ *
+ * @property string $itemBagClassName
+ * @property string $gatewayClassName
  * @author    Pixel & Tonic, Inc. <support@pixelandtonic.com>
  * @since     1.0
  */
