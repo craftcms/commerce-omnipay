@@ -3,7 +3,7 @@
 namespace craft\commerce\omnipay\events;
 
 use craft\commerce\models\Transaction;
-use craft\events\CancelableEvent;
+use yii\base\Event;
 
 /**
  * Class GatewayRequestEvent
@@ -11,7 +11,7 @@ use craft\events\CancelableEvent;
  * @author Pixel & Tonic, Inc. <support@pixelandtonic.com>
  * @since  2.0
  */
-class GatewayRequestEvent extends CancelableEvent
+class GatewayRequestEvent extends Event
 {
     // Properties
     // =========================================================================

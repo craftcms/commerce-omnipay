@@ -7,7 +7,6 @@ use craft\commerce\base\Gateway as BaseGateway;
 use craft\commerce\base\Purchasable;
 use craft\commerce\base\RequestResponseInterface;
 use craft\commerce\elements\Order;
-use craft\commerce\errors\GatewayRequestCancelledException;
 use craft\commerce\errors\PaymentException;
 use craft\commerce\helpers\Currency;
 use craft\commerce\models\LineItem;
@@ -65,9 +64,7 @@ abstract class Gateway extends BaseGateway
     /**
      * @event GatewayRequestEvent The event that is triggered before a gateway request is sent.
      *
-     * You may set [[GatewayRequestEvent::isValid]] to `false` to prevent the request from being sent.
-     *
-     * This event gives you a chance to do something before a request is being sent to the gateway. If you set the `isValid` property of the event to `true`, the request will be cancelled.
+     * This event gives you a chance to do something before a request is being sent to the gateway.
      *
      * ```php
      * use craft\commerce\omnipay\events\GatewayRequestEvent
@@ -76,8 +73,7 @@ abstract class Gateway extends BaseGateway
      *
      * Event::on(Gateway::class, Gateway::EVENT_BEFORE_GATEWAY_REQUEST_SEND, function(GatewayRequestEvent $e) {
      *     if ($e->request['someKey'] === 'someValue') {
-     *         // Prevent the request from going through
-     *         $e->isValid = false;
+     *         // do something
      *     }
      * });
      * ```
@@ -738,10 +734,6 @@ abstract class Gateway extends BaseGateway
 
         // Raise 'beforeGatewayRequestSend' event
         $this->trigger(self::EVENT_BEFORE_GATEWAY_REQUEST_SEND, $event);
-
-        if (!$event->isValid) {
-            throw new GatewayRequestCancelledException(Craft::t('commerce', 'The gateway request was cancelled!'));
-        }
 
         $response = $this->sendRequest($request);
 
