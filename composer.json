@@ -38,7 +38,7 @@
     }
   ],
   "extra": {
-    "name": "Omnipay",
+    "name": "Omnipay for Craft Commerce",
     "handle": "commerce-omnipay",
     "changelogUrl": "https://raw.githubusercontent.com/craftcms/commerce-omnipay/master/CHANGELOG.md",
     "downloadUrl": "https://github.com/craftcms/commerce-omnipay/archive/master.zip"
