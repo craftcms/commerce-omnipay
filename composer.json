@@ -1,6 +1,6 @@
 {
   "name": "craftcms/commerce-omnipay",
-  "description": "Omnipay integration for Craft Commerce",
+  "description": "Omnipay integration plugin for Craft Commerce 2",
   "version": "1.0.0",
   "keywords": [
     "commerce",
@@ -23,7 +23,7 @@
     "rss": "https://github.com/craftcms/commerce-omnipay/commits/master.atom"
   },
   "require": {
-    "craftcms/commerce": "*",
+    "craftcms/commerce": "^2.0.0-alpha.5",
     "omnipay/common": "~2.3"
   },
   "autoload": {
@@ -31,12 +31,6 @@
       "craft\\commerce\\omnipay\\": "src/"
     }
   },
-  "repositories": [
-    {
-      "type": "composer",
-      "url": "https://asset-packagist.org"
-    }
-  ],
   "extra": {
     "name": "Omnipay for Craft Commerce",
     "handle": "commerce-omnipay",
