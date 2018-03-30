@@ -101,6 +101,12 @@ abstract class Gateway extends BaseGateway
 
     // Properties
     // =========================================================================
+
+    /**
+     * @var bool Whether cart information should be sent to the payment gateway
+     */
+    public $sendCartInfo = false;
+
     /**
      * @var AbstractGateway
      */
