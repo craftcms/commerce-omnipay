@@ -261,7 +261,7 @@ abstract class Gateway extends BaseGateway
         if (!$address = $cart->getBillingAddress()) {
             $customer = Commerce::getInstance()->getCustomers()->getCustomerByUserId($user->getId());
 
-            if (!$customer || !($address = $customer->getLastUsedBillingAddress())) {
+            if (!$customer || !($address = $customer->getPrimaryBillingAddress())) {
                 throw new NotSupportedException(Craft::t('commerce', 'You need a billing address to save a payment source.'));
             }
 
