@@ -23,7 +23,7 @@
     "rss": "https://github.com/craftcms/commerce-omnipay/commits/master.atom"
   },
   "require": {
-    "craftcms/commerce": "^2.0.0-alpha.7",
+    "craftcms/commerce": "^2.0.0-beta.5",
     "omnipay/common": "~2.3"
   },
   "autoload": {
