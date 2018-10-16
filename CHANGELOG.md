@@ -1,7 +1,7 @@
 Changelog
 =========
 
-### Unreleased
+### 1.0.2
 
 * Stop sending `notifyUrl` parameter if gateway does not support webhooks.
 
