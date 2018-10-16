@@ -503,7 +503,9 @@ abstract class Gateway extends BaseGateway
         ];
 
         // Set the webhook url.
-        $request['notifyUrl'] = $this->supportsWebhooks() ? $this->getWebhookUrl($params) : $request['returnUrl'];
+        if ($this->supportsWebhooks()) {
+            $request['notifyUrl'] = $this->getWebhookUrl($params);
+        }
 
         // Do not use IPv6 loopback
         if ($request['clientIp'] ===  '::1') {
