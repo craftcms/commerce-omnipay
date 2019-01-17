@@ -43,7 +43,7 @@ class RequestResponse implements RequestResponseInterface
      */
     public function isProcessing(): bool
     {
-        return $this->response->isPending();
+        return method_exists($this->response, 'isPending') ? $this->response->isPending() : $this->response->isOpen();
     }
 
     /**
