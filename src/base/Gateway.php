@@ -478,7 +478,7 @@ abstract class Gateway extends BaseGateway
     }
 
     /**
-     * Create the parameters for a payment request based on a trasaction and optional card and item list.
+     * Create the parameters for a payment request based on a transaction and optional card and item list.
      *
      * @param Transaction $transaction The transaction that is basis for this request.
      * @param CreditCard  $card        The credit card being used
@@ -495,7 +495,7 @@ abstract class Gateway extends BaseGateway
             'amount' => $transaction->paymentAmount,
             'currency' => $transaction->paymentCurrency,
             'transactionId' => $transaction->hash,
-            'description' => Craft::t('commerce', 'Order').' #'.$transaction->orderId,
+            'description' => Craft::t('commerce', 'Order').' '.$transaction->order->reference,
             'clientIp' => Craft::$app->getRequest()->userIP,
             'transactionReference' => $transaction->hash,
             'returnUrl' => UrlHelper::actionUrl('commerce/payments/complete-payment', $params),
