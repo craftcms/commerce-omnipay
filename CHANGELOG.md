@@ -1,14 +1,24 @@
-Changelog
-=========
+# Release Notes for Omnipay integration package for Craft Commerce
 
-### 1.0.2
+## Unreleased
 
-* Stop sending `notifyUrl` parameter if gateway does not support webhooks.
+### Added
+- `craft\commerce\omnipay\base\Gateway::createOmnipayGateway()` method that creates the omnipay gateway using Craft's Guzzle client.
 
-### 1.0.1
+### Changed
+- Package now uses Omnipay v3.
 
-* Added additional user ID param to `Gateway::createPaymentSource()` for compatibility with Commerce 2.0.0-beta.5
+## 1.0.2 - 2018-10-16
 
-### 1.0.0
+### Fixed
+- Fized a bug where `notifyUrl` parameter was set even if gateway did not support webhooks.
 
-* Initial release.
+## 1.0.1 - 2018-05-30
+
+### Changed
+- Package now requires Commerce 2.0.0-beta.5
+- Added additional user ID param to `Gateway::createPaymentSource()` for compatibility with Commerce 2.0.0-beta.5
+
+## 1.0.0 - 2018-04-03
+
+- Initial release.
