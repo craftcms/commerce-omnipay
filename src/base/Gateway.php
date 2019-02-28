@@ -22,13 +22,17 @@ use craft\commerce\Plugin as Commerce;
 use craft\commerce\records\Transaction as TransactionRecord;
 use craft\helpers\UrlHelper;
 use craft\web\Response as WebResponse;
+use Http\Adapter\Guzzle6\Client;
 use Omnipay\Common\AbstractGateway;
 use Omnipay\Common\CreditCard;
+use Omnipay\Common\GatewayInterface;
+use Omnipay\Common\Http\Client as OmnipayClient;
 use Omnipay\Common\ItemBag;
 use Omnipay\Common\Message\AbstractRequest;
 use Omnipay\Common\Message\AbstractResponse;
 use Omnipay\Common\Message\RequestInterface;
 use Omnipay\Common\Message\ResponseInterface;
+use Omnipay\Omnipay;
 use yii\base\NotSupportedException;
 
 /**
@@ -505,6 +509,7 @@ abstract class Gateway extends BaseGateway
         // Set the webhook url.
         if ($this->supportsWebhooks()) {
             $request['notifyUrl'] = $this->getWebhookUrl($params);
+            $request['notifyUrl'] = str_replace('rc.craft.local', 'umbushka.eu.ngrok.io', $request['notifyUrl']);
         }
 
         // Do not use IPv6 loopback
@@ -864,5 +869,20 @@ abstract class Gateway extends BaseGateway
         }
 
         return $request->send();
+    }
+
+    /**
+     * Create the omnipay gateway.
+     *
+     * @param string $gatewayClassName
+     * @return GatewayInterface
+     */
+    protected static function createOmnipayGateway(string $gatewayClassName): GatewayInterface
+    {
+        $craftClient = Craft::createGuzzleClient();
+        $adapter = new Client($craftClient);
+        $httpClient = new OmnipayClient($adapter);
+
+        return Omnipay::create($gatewayClassName, $httpClient);
     }
 }
