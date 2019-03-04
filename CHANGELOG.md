@@ -3,7 +3,7 @@
 ## Unreleased
 
 ### Added
-- `craft\commerce\omnipay\base\Gateway::createOmnipayGateway()` method that creates the omnipay gateway using Craft's Guzzle client.
+- `craft\commerce\omnipay\base\Gateway::createOmnipayGateway()` method for creating the Omnipay gateway using Craft's Guzzle client.
 
 ### Changed
 - Package now uses Omnipay v3.
