@@ -1,6 +1,6 @@
 # Release Notes for Omnipay integration package for Craft Commerce
 
-## Unreleased
+## 2.0.0 - 2019-03-04
 
 ### Added
 - `craft\commerce\omnipay\base\Gateway::createOmnipayGateway()` method for creating the Omnipay gateway using Craft's Guzzle client.
