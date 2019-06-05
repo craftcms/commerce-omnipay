@@ -500,7 +500,7 @@ abstract class Gateway extends BaseGateway
             'currency' => $transaction->paymentCurrency,
             'transactionId' => $transaction->hash,
             'description' => Craft::t('commerce', 'Order').' #'.$transaction->orderId,
-            'clientIp' => Craft::$app->getRequest()->userIP,
+            'clientIp' => (property_exists(Craft::$app->getRequest(), 'userIP')? Craft::$app->getRequest()->userIP : ''),
             'transactionReference' => $transaction->hash,
             'returnUrl' => UrlHelper::actionUrl('commerce/payments/complete-payment', $params),
             'cancelUrl' => UrlHelper::siteUrl($transaction->order->cancelUrl),
