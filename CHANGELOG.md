@@ -1,5 +1,10 @@
 # Release Notes for Omnipay integration package for Craft Commerce
 
+## Unreleased
+
+### Fixed
+- Fix a bug where using gateway via CLI would break. ([#9] (https://github.com/craftcms/commerce-omnipay/issues/9))
+
 ## 2.0.0 - 2019-03-04
 
 ### Added
