@@ -1,7 +1,7 @@
 {
   "name": "craftcms/commerce-omnipay",
   "description": "Omnipay integration plugin for Craft Commerce 2",
-  "version": "2.0.1",
+  "version": "2.1.0",
   "keywords": [
     "commerce",
     "craftcms",
@@ -23,7 +23,7 @@
     "rss": "https://github.com/craftcms/commerce-omnipay/commits/master.atom"
   },
   "require": {
-    "craftcms/commerce": "^2.0",
+    "craftcms/commerce": "^2.0|^3.0",
     "omnipay/common": "^3.0",
     "php-http/guzzle6-adapter": "^1.1.1"
   },
