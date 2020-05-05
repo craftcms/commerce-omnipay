@@ -1,5 +1,10 @@
 # Release Notes for Omnipay integration package for Craft Commerce
 
+## 2.1.1
+
+### Changed
+- Changed Guzzle version requirements to also allow 2.x versions.
+
 ## 2.1.0.1 - 2019-07-24
 
 ### Changed
