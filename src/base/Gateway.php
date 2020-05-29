@@ -112,6 +112,11 @@ abstract class Gateway extends BaseGateway
     public $sendCartInfo = false;
 
     /**
+     * @var int The amount of time in seconds a transaction can be voided after being captured.
+     */
+    public $voidWindow = 86400;
+
+    /**
      * @var AbstractGateway
      */
     private $_gateway;
@@ -144,6 +149,21 @@ abstract class Gateway extends BaseGateway
 
         $request = $this->createRequest($transaction);
         $captureRequest = $this->prepareCaptureRequest($request, $reference);
+
+        return $this->performRequest($captureRequest, $transaction);
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function void(Transaction $transaction, string $reference): RequestResponseInterface
+    {
+        if (!$this->supportsVoid()) {
+            throw new NotSupportedException(Craft::t('commerce', 'Voiding is not supported by this gateway'));
+        }
+
+        $request = $this->createRequest($transaction);
+        $captureRequest = $this->prepareVoidRequest($request, $reference);
 
         return $this->performRequest($captureRequest, $transaction);
     }
@@ -314,7 +334,7 @@ abstract class Gateway extends BaseGateway
      *
      * @param CreditCard            $card        The credit card to populate.
      * @param CreditCardPaymentForm $paymentForm The payment form.
-     *                                    
+     *
      * @return void
      */
     public function populateCard($card, CreditCardPaymentForm $paymentForm)
@@ -393,6 +413,14 @@ abstract class Gateway extends BaseGateway
     public function supportsCapture(): bool
     {
         return $this->gateway()->supportsCapture();
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function supportsVoid(): bool
+    {
+        return $this->gateway()->supportsVoid();
     }
 
     /**
@@ -795,6 +823,23 @@ abstract class Gateway extends BaseGateway
     {
         /** @var AbstractRequest $captureRequest */
         $captureRequest = $this->gateway()->capture($request);
+        $captureRequest->setTransactionReference($reference);
+
+        return $captureRequest;
+    }
+
+    /**
+     * Prepare a void request from request data and reference of the transaction being voided.
+     *
+     * @param array  $request
+     * @param string $reference
+     *
+     * @return RequestInterface
+     */
+    protected function prepareVoidRequest($request, string $reference): RequestInterface
+    {
+        /** @var AbstractRequest $captureRequest */
+        $captureRequest = $this->gateway()->void($request);
         $captureRequest->setTransactionReference($reference);
 
         return $captureRequest;
