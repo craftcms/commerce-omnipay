@@ -1,5 +1,11 @@
 # Release Notes for Omnipay integration package for Craft Commerce
 
+## 3.0.0
+
+### Changed
+- Package now requires Commerce 3.3
+- Guzzle 7 is now required.
+
 ## 2.1.1
 
 ### Changed
@@ -7,7 +13,7 @@
 
 ## 2.1.0.1 - 2019-07-24
 
-### Changed
+### Changed
 - Updated changelog with missing changes for 2.1.0
 
 ## 2.1.0 - 2019-07-24
@@ -31,7 +37,7 @@
 ## 1.0.2 - 2018-10-16
 
 ### Fixed
-- Fized a bug where `notifyUrl` parameter was set even if gateway did not support webhooks.
+- Fixed a bug where `notifyUrl` parameter was set even if gateway did not support webhooks.
 
 ## 1.0.1 - 2018-05-30
 
