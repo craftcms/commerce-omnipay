@@ -1,6 +1,6 @@
 # Release Notes for Omnipay integration package for Craft Commerce
 
-## 3.0.0 Unreleased
+## 3.0.0
 
 ### Changed
 - Package now requires Commerce 3.3
