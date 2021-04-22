@@ -509,7 +509,6 @@ abstract class Gateway extends BaseGateway
         // Set the webhook url.
         if ($this->supportsWebhooks()) {
             $request['notifyUrl'] = $this->getWebhookUrl($params);
-            $request['notifyUrl'] = str_replace('rc.craft.local', 'umbushka.eu.ngrok.io', $request['notifyUrl']);
         }
 
         // Do not use IPv6 loopback
