@@ -22,7 +22,7 @@ use craft\commerce\Plugin as Commerce;
 use craft\commerce\records\Transaction as TransactionRecord;
 use craft\helpers\UrlHelper;
 use craft\web\Response as WebResponse;
-use Http\Adapter\Guzzle6\Client;
+use Http\Adapter\Guzzle7\Client;
 use Omnipay\Common\AbstractGateway;
 use Omnipay\Common\CreditCard;
 use Omnipay\Common\GatewayInterface;
@@ -509,7 +509,6 @@ abstract class Gateway extends BaseGateway
         // Set the webhook url.
         if ($this->supportsWebhooks()) {
             $request['notifyUrl'] = $this->getWebhookUrl($params);
-            $request['notifyUrl'] = str_replace('rc.craft.local', 'umbushka.eu.ngrok.io', $request['notifyUrl']);
         }
 
         // Do not use IPv6 loopback
