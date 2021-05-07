@@ -193,15 +193,24 @@ abstract class Gateway extends BaseGateway
         if ($paymentForm instanceof CreditCardPaymentForm) {
             $this->populateCard($card, $paymentForm);
         }
-
+        
         if ($order) {
             if ($billingAddress = $order->getBillingAddress()) {
-                // Set top level names to the billing names
-                $card->setFirstName($billingAddress->firstName);
-                $card->setLastName($billingAddress->lastName);
+                
+                // Fallback to billing address names if credit card name is empty
+                $firstName = $paymentForm->firstName ?: $billingAddress->firstName;
+                $lastName = $paymentForm->lastName ?: $billingAddress->lastName;
+                
+                // Set top level names to the billing names 
+                $card->setFirstName($firstName);
+                $card->setLastName($lastName);
 
-                $card->setBillingFirstName($billingAddress->firstName);
-                $card->setBillingLastName($billingAddress->lastName);
+                // Fallback to credit card form names if billing address name is empty
+                $billingFirstName = $billingAddress->firstName ?: $paymentForm->firstName;
+                $billingLastName = $billingAddress->lastName ?: $paymentForm->lastName;
+                
+                $card->setBillingFirstName($billingFirstName);
+                $card->setBillingLastName($billingLastName);
                 $card->setBillingAddress1($billingAddress->address1);
                 $card->setBillingAddress2($billingAddress->address2);
                 $card->setBillingCity($billingAddress->city);
@@ -219,8 +228,13 @@ abstract class Gateway extends BaseGateway
             }
 
             if ($shippingAddress = $order->getShippingAddress()) {
-                $card->setShippingFirstName($shippingAddress->firstName);
-                $card->setShippingLastName($shippingAddress->lastName);
+
+                // Fallback to credit card form names if shipping address name is empty
+                $shippingFirstName = $shippingAddress->firstName ?: $paymentForm->firstName;
+                $shippingLastName = $shippingAddress->lastName ?: $paymentForm->lastName;
+                
+                $card->setShippingFirstName($shippingFirstName);
+                $card->setShippingLastName($shippingLastName);
                 $card->setShippingAddress1($shippingAddress->address1);
                 $card->setShippingAddress2($shippingAddress->address2);
                 $card->setShippingCity($shippingAddress->city);
