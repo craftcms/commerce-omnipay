@@ -228,13 +228,8 @@ abstract class Gateway extends BaseGateway
             }
 
             if ($shippingAddress = $order->getShippingAddress()) {
-
-                // Fallback to credit card form names if shipping address name is empty
-                $shippingFirstName = $shippingAddress->firstName ?: $paymentForm->firstName;
-                $shippingLastName = $shippingAddress->lastName ?: $paymentForm->lastName;
-
-                $card->setShippingFirstName($shippingFirstName);
-                $card->setShippingLastName($shippingLastName);
+                $card->setShippingFirstName($shippingAddress->firstName);
+                $card->setShippingLastName($shippingAddress->lastName);
                 $card->setShippingAddress1($shippingAddress->address1);
                 $card->setShippingAddress2($shippingAddress->address2);
                 $card->setShippingCity($shippingAddress->city);
