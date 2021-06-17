@@ -1,6 +1,6 @@
 # Release Notes for Omnipay integration package for Craft Commerce
 
-## Unreleased
+## 3.0.1 - 2021-06-17
 
 ### Fixed
 - Fixed a bug where fallback billing names were being set incorrectly. ([#17](https://github.com/craftcms/commerce-omnipay/issues/17))
