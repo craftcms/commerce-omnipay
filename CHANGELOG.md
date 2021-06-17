@@ -1,5 +1,9 @@
 # Release Notes for Omnipay integration package for Craft Commerce
 
+### Fixed
+- Fixed a bug where some payment gateways requires billing and shipping names to be submitted. Added fallback values from credit card form names.
+
+
 ## 3.0.0 - 2021-04-20
 
 ### Changed
