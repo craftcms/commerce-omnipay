@@ -355,7 +355,7 @@ abstract class Gateway extends BaseGateway
      */
     public function processWebHook(): WebResponse
     {
-        return null;
+        return Craft::$app->getResponse();
     }
 
     /**
