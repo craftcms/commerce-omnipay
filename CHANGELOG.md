@@ -1,6 +1,6 @@
 # Release Notes for Omnipay integration package for Craft Commerce
 
-## Unreleased
+## 3.0.2 - 2021-06-21
 
 ### Fixed
 - Fixed an error that could occur when using the `OffsitePaymentForm` model. ([#17](https://github.com/craftcms/commerce-omnipay/issues/17))
