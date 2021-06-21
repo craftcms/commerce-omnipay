@@ -197,17 +197,22 @@ abstract class Gateway extends BaseGateway
         if ($order) {
             if ($billingAddress = $order->getBillingAddress()) {
 
-                // Fallback to billing address names if credit card name is empty
-                $firstName = $paymentForm->firstName ?: $billingAddress->firstName;
-                $lastName = $paymentForm->lastName ?: $billingAddress->lastName;
+                $firstName = $billingAddress->firstName;
+                $lastName = $billingAddress->lastName;
 
-                // Set top level names to the billing names 
+                if ($paymentForm instanceof CreditCardPaymentForm) {
+                    // Fallback to billing address names if credit card name is empty
+                    $firstName = $paymentForm->firstName ?: $firstName;
+                    $lastName = $paymentForm->lastName ?: $lastName;
+                }
+
+                // Set top level names to the billing names
                 $card->setFirstName($firstName);
                 $card->setLastName($lastName);
 
                 // Fallback to credit card form names if billing address name is empty
-                $billingFirstName = $billingAddress->firstName ?: $paymentForm->firstName;
-                $billingLastName = $billingAddress->lastName ?: $paymentForm->lastName;
+                $billingFirstName = $billingAddress->firstName ?: $firstName;
+                $billingLastName = $billingAddress->lastName ?: $lastName;
 
                 $card->setBillingFirstName($billingFirstName);
                 $card->setBillingLastName($billingLastName);
@@ -355,7 +360,7 @@ abstract class Gateway extends BaseGateway
      */
     public function processWebHook(): WebResponse
     {
-        return null;
+        return Craft::$app->getResponse();
     }
 
     /**
