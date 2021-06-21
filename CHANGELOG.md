@@ -34,7 +34,7 @@
 ## 2.0.1 - 2019-06-06
 
 ### Fixed
-- Fix a bug where using gateway via CLI would break. ([#9] (https://github.com/craftcms/commerce-omnipay/issues/9))
+- Fix a bug where using gateway via CLI would break. ([#9](https://github.com/craftcms/commerce-omnipay/issues/9))
 
 ## 2.0.0 - 2019-03-04
 
