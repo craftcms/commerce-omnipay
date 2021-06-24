@@ -680,7 +680,10 @@ abstract class Gateway extends BaseGateway
 
         /** @var LineItem $item */
         foreach ($order->lineItems as $item) {
-            $price = Currency::round($item->salePrice);
+            $price = Currency::round(
+                Commerce::getInstance()->getPaymentCurrencies()->convertCurrency($item->salePrice, $order->currency, $order->paymentCurrency),
+                Commerce::getInstance()->getPaymentCurrencies()->getPaymentCurrencyByIso($order->paymentCurrency)
+            );
             // Can not accept zero amount items. See item (4) here:
             // https://developer.paypal.com/docs/classic/express-checkout/integration-guide/ECCustomizing/#setting-order-details-on-the-paypal-review-page
 
