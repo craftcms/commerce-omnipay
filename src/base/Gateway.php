@@ -710,8 +710,11 @@ abstract class Gateway extends BaseGateway
 
         /** @var OrderAdjustment $adjustment */
         foreach ($order->adjustments as $adjustment) {
-            $price = Currency::round($adjustment->amount);
-
+            $price = Currency::round(
+                Commerce::getInstance()->getPaymentCurrencies()->convertCurrency($adjustment->amount, $order->currency, $order->paymentCurrency),
+                Commerce::getInstance()->getPaymentCurrencies()->getPaymentCurrencyByIso($order->paymentCurrency)
+            );
+            
             // Do not include the 'included' adjustments, and do not send zero value items
             // See item (4) https://developer.paypal.com/docs/classic/express-checkout/integration-guide/ECCustomizing/#setting-order-details-on-the-paypal-review-page
             if (($adjustment->included == 0 || $adjustment->included == false) && $price !== 0) {
