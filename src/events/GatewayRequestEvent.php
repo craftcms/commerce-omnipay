@@ -13,9 +13,6 @@ use yii\base\Event;
  */
 class GatewayRequestEvent extends Event
 {
-    // Properties
-    // =========================================================================
-
     /**
      * @var string Transaction type
      */

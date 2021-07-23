@@ -45,8 +45,6 @@ use yii\base\NotSupportedException;
  */
 abstract class Gateway extends BaseGateway
 {
-    // Constants
-    // =========================================================================
     /**
      * @event ItemBagEvent The event that is triggered after an item bag is created.
      *
@@ -103,9 +101,6 @@ abstract class Gateway extends BaseGateway
      */
     const EVENT_BEFORE_SEND_PAYMENT_REQUEST = 'beforeSendPaymentRequest';
 
-    // Properties
-    // =========================================================================
-
     /**
      * @var bool Whether cart information should be sent to the payment gateway
      */
@@ -116,8 +111,6 @@ abstract class Gateway extends BaseGateway
      */
     private $_gateway;
 
-    // Public methods
-    // =========================================================================
     /**
      * @inheritdocs
      */
@@ -465,9 +458,6 @@ abstract class Gateway extends BaseGateway
     {
         return false;
     }
-
-    // Protected Methods
-    // =========================================================================
 
     /**
      * Creates and returns an Omnipay gateway instance based on the stored settings.
