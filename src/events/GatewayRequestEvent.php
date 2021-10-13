@@ -16,7 +16,7 @@ class GatewayRequestEvent extends Event
     /**
      * @var string Transaction type
      */
-    public $type;
+    public string $type;
 
     /**
      * @var mixed The request
@@ -26,5 +26,5 @@ class GatewayRequestEvent extends Event
     /**
      * @var Transaction The transaction being sent
      */
-    public $transaction;
+    public Transaction $transaction;
 }

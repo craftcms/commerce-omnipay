@@ -104,7 +104,7 @@ abstract class Gateway extends BaseGateway
     /**
      * @var bool Whether cart information should be sent to the payment gateway
      */
-    public $sendCartInfo = false;
+    public bool $sendCartInfo = false;
 
     /**
      * @var AbstractGateway
@@ -674,7 +674,7 @@ abstract class Gateway extends BaseGateway
             // Can not accept zero amount items. See item (4) here:
             // https://developer.paypal.com/docs/classic/express-checkout/integration-guide/ECCustomizing/#setting-order-details-on-the-paypal-review-page
 
-            if ($price !== 0) {
+            if ($price != 0) {
                 $count++;
                 /** @var Purchasable $purchasable */
                 $purchasable = $item->getPurchasable();
@@ -701,7 +701,7 @@ abstract class Gateway extends BaseGateway
 
             // Do not include the 'included' adjustments, and do not send zero value items
             // See item (4) https://developer.paypal.com/docs/classic/express-checkout/integration-guide/ECCustomizing/#setting-order-details-on-the-paypal-review-page
-            if (($adjustment->included == 0 || $adjustment->included == false) && $price !== 0) {
+            if (($adjustment->included == 0 || $adjustment->included == false) && $price != 0) {
                 $count++;
                 $items[] = [
                     'name' => empty($adjustment->name) ? $adjustment->type." ".$count : $adjustment->name,

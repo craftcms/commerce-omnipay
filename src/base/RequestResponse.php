@@ -17,12 +17,12 @@ class RequestResponse implements RequestResponseInterface
     /**
      * @var AbstractResponse
      */
-    protected $response;
+    protected AbstractResponse $response;
 
     /**
      * @var Transaction
      */
-    protected $transaction;
+    protected Transaction $transaction;
 
     public function __construct(AbstractResponse $response, Transaction $transaction)
     {
