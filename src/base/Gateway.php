@@ -45,8 +45,6 @@ use yii\base\NotSupportedException;
  */
 abstract class Gateway extends BaseGateway
 {
-    // Constants
-    // =========================================================================
     /**
      * @event ItemBagEvent The event that is triggered after an item bag is created.
      *
@@ -103,9 +101,6 @@ abstract class Gateway extends BaseGateway
      */
     const EVENT_BEFORE_SEND_PAYMENT_REQUEST = 'beforeSendPaymentRequest';
 
-    // Properties
-    // =========================================================================
-
     /**
      * @var bool Whether cart information should be sent to the payment gateway
      */
@@ -116,8 +111,6 @@ abstract class Gateway extends BaseGateway
      */
     private $_gateway;
 
-    // Public methods
-    // =========================================================================
     /**
      * @inheritdocs
      */
@@ -466,9 +459,6 @@ abstract class Gateway extends BaseGateway
         return false;
     }
 
-    // Protected Methods
-    // =========================================================================
-
     /**
      * Creates and returns an Omnipay gateway instance based on the stored settings.
      *
@@ -684,7 +674,8 @@ abstract class Gateway extends BaseGateway
             // Can not accept zero amount items. See item (4) here:
             // https://developer.paypal.com/docs/classic/express-checkout/integration-guide/ECCustomizing/#setting-order-details-on-the-paypal-review-page
 
-            if ($price !== 0) {
+            // Don't make a strict comparison here, because the price may be a rounded float.
+            if ($price != 0) {
                 $count++;
                 /** @var Purchasable $purchasable */
                 $purchasable = $item->getPurchasable();
