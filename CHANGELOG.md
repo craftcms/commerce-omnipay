@@ -1,6 +1,6 @@
 # Release Notes for Omnipay integration package for Craft Commerce
 
-## Unreleased
+## 3.0.3 - 2021-11-03
 
 ### Fixed
 - Fixed a bug where zero-value line items were being sent to the gateway. ([#24](https://github.com/craftcms/commerce-omnipay/issues/24))
