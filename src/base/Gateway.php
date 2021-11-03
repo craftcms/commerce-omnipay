@@ -674,7 +674,8 @@ abstract class Gateway extends BaseGateway
             // Can not accept zero amount items. See item (4) here:
             // https://developer.paypal.com/docs/classic/express-checkout/integration-guide/ECCustomizing/#setting-order-details-on-the-paypal-review-page
 
-            if ($price !== 0) {
+            // Don't make a strict comparison here, because the price may be a rounded float.
+            if ($price != 0) {
                 $count++;
                 /** @var Purchasable $purchasable */
                 $purchasable = $item->getPurchasable();
