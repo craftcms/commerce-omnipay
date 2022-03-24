@@ -46,7 +46,7 @@ abstract class CreditCardGateway extends Gateway
      */
     public function populateRequest(array &$request, BasePaymentForm $paymentForm = null)
     {
-        if ($paymentForm && $paymentForm->hasProperty('token') && $paymentForm->token) {
+        if ($paymentForm && $paymentForm->hasProperty('token') && isset($paymentForm->token) && $paymentForm->token) {
             $request['token'] = $paymentForm->token;
         }
     }

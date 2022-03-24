@@ -677,7 +677,7 @@ abstract class Gateway extends BaseGateway
             // Don't make a strict comparison here, because the price may be a rounded float.
             if ($price != 0) {
                 $count++;
-                /** @var Purchasable $purchasable */
+                /** @var Purchasable|null $purchasable */
                 $purchasable = $item->getPurchasable();
                 $defaultDescription = Craft::t('commerce', 'Item ID').' '.$item->id;
                 $purchasableDescription = $purchasable ? $purchasable->getDescription() : $defaultDescription;
@@ -728,11 +728,10 @@ abstract class Gateway extends BaseGateway
     /**
      * Perform a request and return the response.
      *
-     * @param $request
-     * @param $transaction
+     * @param RequestInterface $request
+     * @param Transaction $transaction
      *
      * @return RequestResponseInterface
-     * @throws GatewayRequestCancelledException
      */
     protected function performRequest($request, $transaction): RequestResponseInterface
     {
