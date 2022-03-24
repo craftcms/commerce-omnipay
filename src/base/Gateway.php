@@ -179,9 +179,9 @@ abstract class Gateway extends BaseGateway
      *
      * @return CreditCard
      */
-    public function createCard(BasePaymentForm $paymentForm, Order $order = null): CreditCard {
-
-        $card = new CreditCard;
+    public function createCard(BasePaymentForm $paymentForm, Order $order = null): CreditCard
+    {
+        $card = new CreditCard();
 
         if ($paymentForm instanceof CreditCardPaymentForm) {
             $this->populateCard($card, $paymentForm);
@@ -189,7 +189,6 @@ abstract class Gateway extends BaseGateway
 
         if ($order) {
             if ($billingAddress = $order->getBillingAddress()) {
-
                 $firstName = $billingAddress->firstName;
                 $lastName = $billingAddress->lastName;
 
@@ -290,7 +289,7 @@ abstract class Gateway extends BaseGateway
             'gatewayId' => $this->id,
             'token' => $this->extractCardReference($response),
             'response' => $response->getData(),
-            'description' => $this->extractPaymentSourceDescription($response)
+            'description' => $this->extractPaymentSourceDescription($response),
         ]);
 
         return $paymentSource;
@@ -503,7 +502,7 @@ abstract class Gateway extends BaseGateway
             'amount' => $transaction->paymentAmount,
             'currency' => $transaction->paymentCurrency,
             'transactionId' => $transaction->hash,
-            'description' => Craft::t('commerce', 'Order').' #'.$transaction->orderId,
+            'description' => Craft::t('commerce', 'Order') . ' #' . $transaction->orderId,
             'clientIp' => Craft::$app->getRequest()->userIP ?? '',
             'transactionReference' => $transaction->hash,
             'returnUrl' => UrlHelper::actionUrl('commerce/payments/complete-payment', $params),
@@ -516,7 +515,7 @@ abstract class Gateway extends BaseGateway
         }
 
         // Do not use IPv6 loopback
-        if ($request['clientIp'] ===  '::1') {
+        if ($request['clientIp'] === '::1') {
             $request['clientIp'] = '127.0.0.1';
         }
 
@@ -630,7 +629,8 @@ abstract class Gateway extends BaseGateway
      *
      * @return string
      */
-    protected function getItemBagClassName(): string {
+    protected function getItemBagClassName(): string
+    {
         return ItemBag::class;
     }
 
@@ -647,7 +647,7 @@ abstract class Gateway extends BaseGateway
 
         $event = new ItemBagEvent([
             'items' => $itemBag,
-            'order' => $order
+            'order' => $order,
         ]);
         $this->trigger(self::EVENT_AFTER_CREATE_ITEM_BAG, $event);
 
@@ -679,10 +679,10 @@ abstract class Gateway extends BaseGateway
                 $count++;
                 /** @var Purchasable|null $purchasable */
                 $purchasable = $item->getPurchasable();
-                $defaultDescription = Craft::t('commerce', 'Item ID').' '.$item->id;
+                $defaultDescription = Craft::t('commerce', 'Item ID') . ' ' . $item->id;
                 $purchasableDescription = $purchasable ? $purchasable->getDescription() : $defaultDescription;
                 $description = isset($item->snapshot['description']) ? $item->snapshot['description'] : $purchasableDescription;
-                $description = empty($description) ? 'Item '.$count : $description;
+                $description = empty($description) ? 'Item ' . $count : $description;
                 $items[] = [
                     'name' => $description,
                     'description' => $description,
@@ -705,8 +705,8 @@ abstract class Gateway extends BaseGateway
             if (($adjustment->included == 0 || $adjustment->included == false) && $price != 0) {
                 $count++;
                 $items[] = [
-                    'name' => empty($adjustment->name) ? $adjustment->type." ".$count : $adjustment->name,
-                    'description' => empty($adjustment->description) ? $adjustment->type.' '.$count : $adjustment->description,
+                    'name' => empty($adjustment->name) ? $adjustment->type . " " . $count : $adjustment->name,
+                    'description' => empty($adjustment->description) ? $adjustment->type . ' ' . $count : $adjustment->description,
                     'quantity' => 1,
                     'price' => $price,
                 ];
@@ -739,7 +739,7 @@ abstract class Gateway extends BaseGateway
         $event = new GatewayRequestEvent([
             'type' => $transaction->type,
             'request' => $request,
-            'transaction' => $transaction
+            'transaction' => $transaction,
         ]);
 
         // Raise 'beforeGatewayRequestSend' event
@@ -844,7 +844,6 @@ abstract class Gateway extends BaseGateway
         $refundRequest->setTransactionReference($reference);
 
         return $refundRequest;
-
     }
 
     /**
@@ -859,7 +858,7 @@ abstract class Gateway extends BaseGateway
         $data = $request->getData();
 
         $event = new SendPaymentRequestEvent([
-            'requestData' => $data
+            'requestData' => $data,
         ]);
 
         // Raise 'beforeSendPaymentRequest' event

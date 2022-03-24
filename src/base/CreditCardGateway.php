@@ -19,7 +19,7 @@ abstract class CreditCardGateway extends Gateway
     public function getPaymentFormHtml(array $params)
     {
         $defaults = [
-            'paymentForm' => $this->getPaymentFormModel()
+            'paymentForm' => $this->getPaymentFormModel(),
         ];
 
         $params = array_merge($defaults, $params);
