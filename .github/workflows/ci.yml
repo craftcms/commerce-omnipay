@@ -37,3 +37,6 @@ jobs:
 
       - name: Run phpstan
         run: composer run-script phpstan
+
+      - name: Run ecs
+        run: composer run-script check-cs
