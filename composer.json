@@ -37,5 +37,19 @@
     "handle": "commerce-omnipay",
     "changelogUrl": "https://raw.githubusercontent.com/craftcms/commerce-omnipay/master/CHANGELOG.md",
     "downloadUrl": "https://github.com/craftcms/commerce-omnipay/archive/master.zip"
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true,
+  "require-dev": {
+    "craftcms/phpstan": "dev-main"
+  },
+  "config": {
+    "allow-plugins": {
+      "yiisoft/yii2-composer": true,
+      "craftcms/plugin-installer": true
+    }
+  },
+  "scripts": {
+    "phpstan": "phpstan --memory-limit=1G"
   }
 }
