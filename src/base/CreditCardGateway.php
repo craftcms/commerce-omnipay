@@ -21,7 +21,7 @@ abstract class CreditCardGateway extends Gateway
     public function getPaymentFormHtml(array $params): ?string
     {
         $defaults = [
-            'paymentForm' => $this->getPaymentFormModel()
+            'paymentForm' => $this->getPaymentFormModel(),
         ];
 
         $params = array_merge($defaults, $params);
@@ -48,8 +48,8 @@ abstract class CreditCardGateway extends Gateway
      */
     public function populateRequest(array &$request, BasePaymentForm $form = null): void
     {
-        if ($form && $form->hasProperty('token') && $form->token) {
-            $request['token'] = $form->token;
+        if ($paymentForm && $paymentForm->hasProperty('token') && isset($paymentForm->token) && $paymentForm->token) {
+            $request['token'] = $paymentForm->token;
         }
     }
 }
