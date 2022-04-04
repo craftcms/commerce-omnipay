@@ -2,11 +2,9 @@
 
 namespace craft\commerce\omnipay\base;
 
-use Craft;
 use craft\commerce\base\RequestResponseInterface;
 use craft\commerce\models\Transaction;
 use Omnipay\Common\Message\AbstractResponse;
-use Omnipay\Common\Message\ResponseInterface;
 
 /**
  * @author    Pixel & Tonic, Inc. <support@pixelandtonic.com>
@@ -117,6 +115,4 @@ class RequestResponse implements RequestResponseInterface
     {
         return $this->response->getData();
     }
-
-
 }
