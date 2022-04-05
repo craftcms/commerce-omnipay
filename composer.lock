@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d4a1dfc6ee7e9350a6899427f838066d",
+    "content-hash": "31462361db54723fb2cd5a1c48b767e8",
     "packages": [
         {
             "name": "cebe/markdown",
@@ -860,16 +860,16 @@
         },
         {
             "name": "craftcms/commerce",
-            "version": "4.0.0-beta.1",
+            "version": "4.0.x-dev",
             "source": {
                 "type": "git",
                 "url": "https://github.com/craftcms/commerce.git",
-                "reference": "ea56f80fcaf461fe9ca48c94b899cc668ad23df9"
+                "reference": "c321e3f5266e41f8d67a11c7fba513b901abd917"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/craftcms/commerce/zipball/ea56f80fcaf461fe9ca48c94b899cc668ad23df9",
-                "reference": "ea56f80fcaf461fe9ca48c94b899cc668ad23df9",
+                "url": "https://api.github.com/repos/craftcms/commerce/zipball/c321e3f5266e41f8d67a11c7fba513b901abd917",
+                "reference": "c321e3f5266e41f8d67a11c7fba513b901abd917",
                 "shasum": ""
             },
             "require": {
@@ -926,7 +926,7 @@
                 "rss": "https://github.com/craftcms/commerce/releases.atom",
                 "source": "https://github.com/craftcms/commerce"
             },
-            "time": "2022-03-16T19:16:10+00:00"
+            "time": "2022-04-05T09:35:42+00:00"
         },
         {
             "name": "craftcms/oauth2-craftid",
@@ -7886,6 +7886,7 @@
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
+        "craftcms/commerce": 20,
         "craftcms/phpstan": 20,
         "craftcms/ecs": 20
     },
