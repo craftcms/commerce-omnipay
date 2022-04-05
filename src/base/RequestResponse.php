@@ -15,12 +15,12 @@ class RequestResponse implements RequestResponseInterface
     /**
      * @var AbstractResponse
      */
-    protected $response;
+    protected AbstractResponse $response;
 
     /**
      * @var Transaction
      */
-    protected $transaction;
+    protected Transaction $transaction;
 
     public function __construct(AbstractResponse $response, Transaction $transaction)
     {
@@ -103,7 +103,7 @@ class RequestResponse implements RequestResponseInterface
     /**
      * @inheritdoc
      */
-    public function redirect()
+    public function redirect(): void
     {
         $this->response->redirect();
     }
@@ -111,7 +111,7 @@ class RequestResponse implements RequestResponseInterface
     /**
      * @inheritdoc
      */
-    public function getData()
+    public function getData(): mixed
     {
         return $this->response->getData();
     }

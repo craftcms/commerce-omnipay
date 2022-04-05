@@ -16,7 +16,7 @@ class ItemBagEvent extends Event
     /**
      * @var Order The order
      */
-    public $order;
+    public Order $order;
 
     /**
      * @var mixed The item bag
