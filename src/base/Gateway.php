@@ -6,6 +6,7 @@ use Craft;
 use craft\commerce\base\Gateway as BaseGateway;
 use craft\commerce\base\Purchasable;
 use craft\commerce\base\RequestResponseInterface;
+use craft\commerce\behaviors\CustomerBehavior;
 use craft\commerce\elements\Order;
 use craft\commerce\errors\PaymentException;
 use craft\commerce\helpers\Currency;
@@ -20,6 +21,7 @@ use craft\commerce\omnipay\events\ItemBagEvent;
 use craft\commerce\omnipay\events\SendPaymentRequestEvent;
 use craft\commerce\Plugin as Commerce;
 use craft\commerce\records\Transaction as TransactionRecord;
+use craft\elements\User;
 use craft\helpers\UrlHelper;
 use craft\web\Response as WebResponse;
 use Http\Adapter\Guzzle7\Client;
@@ -175,9 +177,10 @@ abstract class Gateway extends BaseGateway
      * Create a card object using the payment form and the optional order
      *
      * @param BasePaymentForm $paymentForm
-     * @param Order           $order
+     * @param Order $order
      *
      * @return CreditCard
+     * @throws \yii\base\InvalidConfigException
      */
     public function createCard(BasePaymentForm $paymentForm, Order $order = null): CreditCard
     {
@@ -189,8 +192,8 @@ abstract class Gateway extends BaseGateway
 
         if ($order) {
             if ($billingAddress = $order->getBillingAddress()) {
-                $firstName = $billingAddress->firstName;
-                $lastName = $billingAddress->lastName;
+                $firstName = $billingAddress->getGivenName();
+                $lastName = $billingAddress->getFamilyName();
 
                 if ($paymentForm instanceof CreditCardPaymentForm) {
                     // Fallback to billing address names if credit card name is empty
@@ -203,46 +206,51 @@ abstract class Gateway extends BaseGateway
                 $card->setLastName($lastName);
 
                 // Fallback to credit card form names if billing address name is empty
-                $billingFirstName = $billingAddress->firstName ?: $firstName;
-                $billingLastName = $billingAddress->lastName ?: $lastName;
+                $billingFirstName = $billingAddress->getGivenName() ?: $firstName;
+                $billingLastName = $billingAddress->getFamilyName() ?: $lastName;
 
                 $card->setBillingFirstName($billingFirstName);
                 $card->setBillingLastName($billingLastName);
-                $card->setBillingAddress1($billingAddress->address1);
-                $card->setBillingAddress2($billingAddress->address2);
-                $card->setBillingCity($billingAddress->city);
-                $card->setBillingPostcode($billingAddress->zipCode);
-                if ($billingAddress->getCountry()) {
-                    $card->setBillingCountry($billingAddress->getCountry()->iso);
+
+                $card->setBillingAddress1($billingAddress->addressLine1);
+                $card->setBillingAddress2($billingAddress->addressLine2);
+                $card->setBillingCity($billingAddress->getLocality());
+                $card->setBillingPostcode($billingAddress->getPostalCode());
+
+                if ($billingCountryCode = $billingAddress->getCountryCode()) {
+                    $card->setBillingCountry($billingCountryCode);
                 }
-                if ($billingAddress->getState()) {
-                    $state = $billingAddress->getState()->abbreviation ?: $billingAddress->getState()->name;
-                    $card->setBillingState($state);
+
+                if ($billingAdministrativeArea = $billingAddress->getAdministrativeArea()) {
+                    $card->setBillingState($billingAdministrativeArea);
                 }
-                $card->setBillingPhone($billingAddress->phone);
-                $card->setBillingCompany($billingAddress->businessName);
-                $card->setCompany($billingAddress->businessName);
+
+                if ($billingOrganization = $billingAddress->getOrganization()) {
+                    $card->setBillingCompany($billingOrganization);
+                    $card->setCompany($billingOrganization);
+                }
             }
 
             if ($shippingAddress = $order->getShippingAddress()) {
-                $card->setShippingFirstName($shippingAddress->firstName);
-                $card->setShippingLastName($shippingAddress->lastName);
-                $card->setShippingAddress1($shippingAddress->address1);
-                $card->setShippingAddress2($shippingAddress->address2);
-                $card->setShippingCity($shippingAddress->city);
-                $card->setShippingPostcode($shippingAddress->zipCode);
+                $card->setShippingFirstName($shippingAddress->getGivenName());
+                $card->setShippingLastName($shippingAddress->getFamilyName());
 
-                if ($shippingAddress->getCountry()) {
-                    $card->setShippingCountry($shippingAddress->getCountry()->iso);
+                $card->setShippingAddress1($shippingAddress->addressLine1);
+                $card->setShippingAddress2($shippingAddress->addressLine2);
+                $card->setShippingCity($shippingAddress->getLocality());
+                $card->setShippingPostcode($shippingAddress->getPostalCode());
+
+                if ($shippingCountryCode = $shippingAddress->getCountryCode()) {
+                    $card->setShippingCountry($shippingCountryCode);
                 }
 
-                if ($shippingAddress->getState()) {
-                    $state = $shippingAddress->getState()->abbreviation ?: $shippingAddress->getState()->name;
-                    $card->setShippingState($state);
+                if ($shippingAdministrativeArea = $shippingAddress->getAdministrativeArea()) {
+                    $card->setShippingState($shippingAdministrativeArea);
                 }
 
-                $card->setShippingPhone($shippingAddress->phone);
-                $card->setShippingCompany($shippingAddress->businessName);
+                if ($shippingOrganization = $shippingAddress->getOrganization()) {
+                    $card->setShippingCompany($shippingOrganization);
+                }
             }
 
             $card->setEmail($order->getEmail());
@@ -262,8 +270,9 @@ abstract class Gateway extends BaseGateway
 
         $cart = Commerce::getInstance()->getCarts()->getCart();
 
-        if (!$address = $cart->getBillingAddress()) {
-            $customer = Commerce::getInstance()->getCustomers()->getCustomerByUserId($userId);
+        if ($cart->getBillingAddress()) {
+            /** @var User|CustomerBehavior|null $customer */
+            $customer = User::find()->id($userId)->one();
 
             if (!$customer || !($address = $customer->getPrimaryBillingAddress())) {
                 throw new NotSupportedException(Craft::t('commerce', 'You need a billing address to save a payment source.'));
