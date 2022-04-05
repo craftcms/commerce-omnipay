@@ -341,7 +341,7 @@ abstract class Gateway extends BaseGateway
      * Populate the request array before it's dispatched.
      *
      * @param array $request Parameter array by reference.
-     * @param BasePaymentForm $paymentForm
+     * @param BasePaymentForm|null $paymentForm
      *
      * @return void
      */
