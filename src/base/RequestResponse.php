@@ -103,7 +103,7 @@ class RequestResponse implements RequestResponseInterface
     /**
      * @inheritdoc
      */
-    public function redirect()
+    public function redirect(): void
     {
         $this->response->redirect();
     }
@@ -111,7 +111,7 @@ class RequestResponse implements RequestResponseInterface
     /**
      * @inheritdoc
      */
-    public function getData()
+    public function getData(): mixed
     {
         return $this->response->getData();
     }
