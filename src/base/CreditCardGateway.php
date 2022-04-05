@@ -3,10 +3,8 @@
 namespace craft\commerce\omnipay\base;
 
 use Craft;
-use craft\commerce\controllers\PaymentsController;
 use craft\commerce\models\payments\BasePaymentForm;
 use craft\commerce\models\payments\CreditCardPaymentForm;
-use craft\helpers\Html;
 use craft\web\View;
 
 /**
