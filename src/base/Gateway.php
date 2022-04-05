@@ -345,7 +345,7 @@ abstract class Gateway extends BaseGateway
      *
      * @return void
      */
-    abstract public function populateRequest(array &$request, BasePaymentForm $form = null);
+    abstract public function populateRequest(array &$request, BasePaymentForm $paymentForm = null);
 
     /**
      * @inheritdoc
