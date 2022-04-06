@@ -22,6 +22,7 @@ use craft\commerce\omnipay\events\SendPaymentRequestEvent;
 use craft\commerce\Plugin as Commerce;
 use craft\commerce\records\Transaction as TransactionRecord;
 use craft\elements\User;
+use craft\helpers\App;
 use craft\helpers\UrlHelper;
 use craft\web\Response as WebResponse;
 use Http\Adapter\Guzzle7\Client;
@@ -42,6 +43,7 @@ use yii\base\NotSupportedException;
  *
  * @property string $itemBagClassName
  * @property string $gatewayClassName
+ * @property bool $sendCartInfo
  * @author    Pixel & Tonic, Inc. <support@pixelandtonic.com>
  * @since     1.0
  */
@@ -104,14 +106,34 @@ abstract class Gateway extends BaseGateway
     const EVENT_BEFORE_SEND_PAYMENT_REQUEST = 'beforeSendPaymentRequest';
 
     /**
-     * @var bool Whether cart information should be sent to the payment gateway
+     * @var bool|string Whether cart information should be sent to the payment gateway
      */
-    public bool $sendCartInfo = false;
+    private bool|string $_sendCartInfo = false;
 
     /**
      * @var AbstractGateway
      */
     private $_gateway;
+
+    /**
+     * @param bool $parse
+     * @return bool|string
+     * @since 4.0.0
+     */
+    public function getSendCartInfo(bool $parse = true): bool|string
+    {
+        return $parse ? App::parseBooleanEnv($this->_sendCartInfo) : $this->_sendCartInfo;
+    }
+
+    /**
+     * @param bool|string $sendCartInfo
+     * @return void
+     * @since 4.0.0
+     */
+    public function setSendCartInfo(bool|string $sendCartInfo): void
+    {
+        $this->_sendCartInfo = $sendCartInfo;
+    }
 
     /**
      * @inheritdocs
