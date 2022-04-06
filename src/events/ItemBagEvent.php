@@ -21,5 +21,5 @@ class ItemBagEvent extends Event
     /**
      * @var mixed The item bag
      */
-    public $items;
+    public mixed $items;
 }

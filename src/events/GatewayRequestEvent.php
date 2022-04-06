@@ -21,7 +21,7 @@ class GatewayRequestEvent extends Event
     /**
      * @var mixed The request
      */
-    public $request;
+    public mixed $request;
 
     /**
      * @var Transaction The transaction being sent

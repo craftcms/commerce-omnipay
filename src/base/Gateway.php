@@ -10,8 +10,6 @@ use craft\commerce\behaviors\CustomerBehavior;
 use craft\commerce\elements\Order;
 use craft\commerce\errors\PaymentException;
 use craft\commerce\helpers\Currency;
-use craft\commerce\models\LineItem;
-use craft\commerce\models\OrderAdjustment;
 use craft\commerce\models\payments\BasePaymentForm;
 use craft\commerce\models\payments\CreditCardPaymentForm;
 use craft\commerce\models\PaymentSource;
@@ -111,9 +109,9 @@ abstract class Gateway extends BaseGateway
     private bool|string $_sendCartInfo = false;
 
     /**
-     * @var AbstractGateway
+     * @var AbstractGateway|null
      */
-    private AbstractGateway $_gateway;
+    private ?AbstractGateway $_gateway = null;
 
     /**
      * @param bool $parse
@@ -199,7 +197,7 @@ abstract class Gateway extends BaseGateway
      * Create a card object using the payment form and the optional order
      *
      * @param BasePaymentForm $paymentForm
-     * @param Order $order
+     * @param Order|null $order
      *
      * @return CreditCard
      * @throws \yii\base\InvalidConfigException
@@ -354,12 +352,8 @@ abstract class Gateway extends BaseGateway
      *
      * @return void
      */
-    public function populateCard($card, CreditCardPaymentForm $paymentForm): void
+    public function populateCard(CreditCard $card, CreditCardPaymentForm $paymentForm): void
     {
-        if (!$card instanceof CreditCard) {
-            return;
-        }
-
         $card->setFirstName($paymentForm->firstName);
         $card->setLastName($paymentForm->lastName);
         $card->setNumber($paymentForm->number);
@@ -503,7 +497,7 @@ abstract class Gateway extends BaseGateway
      *
      * @return ItemBag|null
      */
-    protected function createItemBagForOrder(Order $order)
+    protected function createItemBagForOrder(Order $order): ?ItemBag
     {
         if (!$this->sendCartInfo) {
             return null;
@@ -519,13 +513,13 @@ abstract class Gateway extends BaseGateway
      * Create the parameters for a payment request based on a trasaction and optional card and item list.
      *
      * @param Transaction $transaction The transaction that is basis for this request.
-     * @param CreditCard  $card        The credit card being used
-     * @param ItemBag     $itemBag     The item list.
+     * @param CreditCard|null  $card        The credit card being used
+     * @param ItemBag|null     $itemBag     The item list.
      *
      * @return array
      * @throws \yii\base\Exception
      */
-    protected function createPaymentRequest(Transaction $transaction, $card = null, $itemBag = null): array
+    protected function createPaymentRequest(Transaction $transaction, ?CreditCard $card = null, ?ItemBag $itemBag = null): array
     {
         $params = ['commerceTransactionId' => $transaction->id, 'commerceTransactionHash' => $transaction->hash];
 
@@ -579,12 +573,12 @@ abstract class Gateway extends BaseGateway
      * Prepare a request for execution by transaction and a populated payment form.
      *
      * @param Transaction     $transaction
-     * @param BasePaymentForm $form        Optional for capture/refund requests.
+     * @param BasePaymentForm|null $form        Optional for capture/refund requests.
      *
      * @return mixed
      * @throws \yii\base\Exception
      */
-    protected function createRequest(Transaction $transaction, BasePaymentForm $form = null)
+    protected function createRequest(Transaction $transaction, ?BasePaymentForm $form = null): mixed
     {
         // For authorize and capture we're referring to a transaction that already took place so no card or item shenanigans.
         if (in_array($transaction->type, [TransactionRecord::TYPE_REFUND, TransactionRecord::TYPE_CAPTURE], false)) {
@@ -641,11 +635,11 @@ abstract class Gateway extends BaseGateway
      */
     protected function gateway(): AbstractGateway
     {
-        if ($this->_gateway !== null) {
-            return $this->_gateway;
+        if ($this->_gateway === null) {
+            $this->_gateway = $this->createGateway();
         }
 
-        return $this->_gateway = $this->createGateway();
+        return $this->_gateway;
     }
 
     /**
@@ -653,7 +647,7 @@ abstract class Gateway extends BaseGateway
      *
      * @return string|null
      */
-    abstract protected function getGatewayClassName();
+    abstract protected function getGatewayClassName(): ?string;
 
     /**
      * Return the class name used for item bags by this gateway.
@@ -672,7 +666,7 @@ abstract class Gateway extends BaseGateway
      *
      * @return mixed
      */
-    protected function getItemBagForOrder(Order $order)
+    protected function getItemBagForOrder(Order $order): mixed
     {
         $itemBag = $this->createItemBagForOrder($order);
 
@@ -699,8 +693,7 @@ abstract class Gateway extends BaseGateway
         $priceCheck = 0;
         $count = -1;
 
-        /** @var LineItem $item */
-        foreach ($order->lineItems as $item) {
+        foreach ($order->getLineItems() as $item) {
             $price = Currency::round($item->salePrice);
             // Can not accept zero amount items. See item (4) here:
             // https://developer.paypal.com/docs/classic/express-checkout/integration-guide/ECCustomizing/#setting-order-details-on-the-paypal-review-page
@@ -727,8 +720,7 @@ abstract class Gateway extends BaseGateway
 
         $count = -1;
 
-        /** @var OrderAdjustment $adjustment */
-        foreach ($order->adjustments as $adjustment) {
+        foreach ($order->getAdjustments() as $adjustment) {
             $price = Currency::round($adjustment->amount);
 
             // Do not include the 'included' adjustments, and do not send zero value items
@@ -747,7 +739,7 @@ abstract class Gateway extends BaseGateway
 
         $priceCheck = Currency::round($priceCheck);
         $totalPrice = Currency::round($order->totalPrice);
-        $same = (bool)($priceCheck === $totalPrice);
+        $same = ($priceCheck === $totalPrice);
 
         if (!$same) {
             Craft::error('Item bag total price does not equal the orders totalPrice, some payment gateways will complain.', __METHOD__);
@@ -764,7 +756,7 @@ abstract class Gateway extends BaseGateway
      *
      * @return RequestResponseInterface
      */
-    protected function performRequest($request, $transaction): RequestResponseInterface
+    protected function performRequest(RequestInterface $request, Transaction $transaction): RequestResponseInterface
     {
         //raising event
         $event = new GatewayRequestEvent([

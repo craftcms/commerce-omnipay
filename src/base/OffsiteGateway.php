@@ -30,7 +30,7 @@ abstract class OffsiteGateway extends Gateway
     /**
      * @inheritdoc
      */
-    public function populateRequest(array &$request, BasePaymentForm $form = null): void
+    public function populateRequest(array &$request, ?BasePaymentForm $paymentForm = null): void
     {
     }
 }
