@@ -65,7 +65,7 @@ abstract class Gateway extends BaseGateway
      * });
      * ```
      */
-    const EVENT_AFTER_CREATE_ITEM_BAG = 'afterCreateItemBag';
+    public const EVENT_AFTER_CREATE_ITEM_BAG = 'afterCreateItemBag';
 
     /**
      * @event GatewayRequestEvent The event that is triggered before a gateway request is sent.
@@ -84,7 +84,7 @@ abstract class Gateway extends BaseGateway
      * });
      * ```
      */
-    const EVENT_BEFORE_GATEWAY_REQUEST_SEND = 'beforeGatewayRequestSend';
+    public const EVENT_BEFORE_GATEWAY_REQUEST_SEND = 'beforeGatewayRequestSend';
 
     /**
      * @event SendPaymentRequestEvent The event that is triggered right before a payment request is being sent.
@@ -103,7 +103,7 @@ abstract class Gateway extends BaseGateway
      * });
      * ```
      */
-    const EVENT_BEFORE_SEND_PAYMENT_REQUEST = 'beforeSendPaymentRequest';
+    public const EVENT_BEFORE_SEND_PAYMENT_REQUEST = 'beforeSendPaymentRequest';
 
     /**
      * @var bool|string Whether cart information should be sent to the payment gateway
@@ -113,7 +113,7 @@ abstract class Gateway extends BaseGateway
     /**
      * @var AbstractGateway
      */
-    private $_gateway;
+    private AbstractGateway $_gateway;
 
     /**
      * @param bool $parse
