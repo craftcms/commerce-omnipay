@@ -354,7 +354,7 @@ abstract class Gateway extends BaseGateway
      *
      * @return void
      */
-    public function populateCard($card, CreditCardPaymentForm $paymentForm)
+    public function populateCard($card, CreditCardPaymentForm $paymentForm): void
     {
         if (!$card instanceof CreditCard) {
             return;
@@ -376,7 +376,7 @@ abstract class Gateway extends BaseGateway
      *
      * @return void
      */
-    abstract public function populateRequest(array &$request, BasePaymentForm $paymentForm = null);
+    abstract public function populateRequest(array &$request, BasePaymentForm $paymentForm = null): void;
 
     /**
      * @inheritdoc
