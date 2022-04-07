@@ -15,10 +15,10 @@ class SendPaymentRequestEvent extends Event
     /**
      * @var mixed Request data
      */
-    public mixed $requestData;
+    public mixed $requestData = null;
 
     /**
      * @var mixed Modified request data
      */
-    public mixed $modifiedRequestData;
+    public mixed $modifiedRequestData = null;
 }
