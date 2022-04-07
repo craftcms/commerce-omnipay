@@ -116,6 +116,17 @@ abstract class Gateway extends BaseGateway
     private ?AbstractGateway $_gateway = null;
 
     /**
+     * @inheritdoc
+     */
+    public function getSettings(): array
+    {
+        $settings = parent::getSettings();
+        $settings['sendCartInfo'] = $this->getSendCartInfo(false);
+
+        return $settings;
+    }
+
+    /**
      * @param bool $parse
      * @return bool|string
      * @since 4.0.0
