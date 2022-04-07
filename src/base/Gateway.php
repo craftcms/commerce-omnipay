@@ -34,6 +34,8 @@ use Omnipay\Common\Message\AbstractResponse;
 use Omnipay\Common\Message\RequestInterface;
 use Omnipay\Common\Message\ResponseInterface;
 use Omnipay\Omnipay;
+use yii\base\Exception;
+use yii\base\InvalidConfigException;
 use yii\base\NotSupportedException;
 
 /**
@@ -200,7 +202,7 @@ abstract class Gateway extends BaseGateway
      * @param Order|null $order
      *
      * @return CreditCard
-     * @throws \yii\base\InvalidConfigException
+     * @throws InvalidConfigException
      */
     public function createCard(BasePaymentForm $paymentForm, Order $order = null): CreditCard
     {
@@ -517,7 +519,7 @@ abstract class Gateway extends BaseGateway
      * @param ItemBag|null     $itemBag     The item list.
      *
      * @return array
-     * @throws \yii\base\Exception
+     * @throws Exception
      */
     protected function createPaymentRequest(Transaction $transaction, ?CreditCard $card = null, ?ItemBag $itemBag = null): array
     {
@@ -576,7 +578,7 @@ abstract class Gateway extends BaseGateway
      * @param BasePaymentForm|null $form        Optional for capture/refund requests.
      *
      * @return mixed
-     * @throws \yii\base\Exception
+     * @throws Exception
      */
     protected function createRequest(Transaction $transaction, ?BasePaymentForm $form = null): mixed
     {
@@ -685,6 +687,7 @@ abstract class Gateway extends BaseGateway
      * @param Order $order
      *
      * @return array
+     * @throws InvalidConfigException
      */
     protected function getItemListForOrder(Order $order): array
     {
@@ -788,11 +791,11 @@ abstract class Gateway extends BaseGateway
     /**
      * Prepare a complete authorization request from request data.
      *
-     * @param array $request
+     * @param mixed $request
      *
      * @return RequestInterface
      */
-    protected function prepareCompleteAuthorizeRequest($request): RequestInterface
+    protected function prepareCompleteAuthorizeRequest(mixed $request): RequestInterface
     {
         return $this->gateway()->completeAuthorize($request);
     }
@@ -800,11 +803,11 @@ abstract class Gateway extends BaseGateway
     /**
      * Prepare a complete purchase request from request data.
      *
-     * @param array $request
+     * @param mixed $request
      *
      * @return RequestInterface
      */
-    protected function prepareCompletePurchaseRequest($request): RequestInterface
+    protected function prepareCompletePurchaseRequest(mixed $request): RequestInterface
     {
         return $this->gateway()->completePurchase($request);
     }
@@ -812,12 +815,12 @@ abstract class Gateway extends BaseGateway
     /**
      * Prepare a capture request from request data and reference of the transaction being captured.
      *
-     * @param array  $request
+     * @param mixed  $request
      * @param string $reference
      *
      * @return RequestInterface
      */
-    protected function prepareCaptureRequest($request, string $reference): RequestInterface
+    protected function prepareCaptureRequest(mixed $request, string $reference): RequestInterface
     {
         /** @var AbstractRequest $captureRequest */
         $captureRequest = $this->gateway()->capture($request);
@@ -829,11 +832,11 @@ abstract class Gateway extends BaseGateway
     /**
      * Prepare a purchase request from request data.
      *
-     * @param array $request
+     * @param mixed $request
      *
      * @return RequestInterface
      */
-    protected function preparePurchaseRequest($request): RequestInterface
+    protected function preparePurchaseRequest(mixed $request): RequestInterface
     {
         return $this->gateway()->purchase($request);
     }
@@ -855,12 +858,12 @@ abstract class Gateway extends BaseGateway
     /**
      * Prepare a refund request from request data and reference of the transaction being refunded.
      *
-     * @param array  $request
+     * @param mixed  $request
      * @param string $reference
      *
      * @return RequestInterface
      */
-    protected function prepareRefundRequest($request, string $reference): RequestInterface
+    protected function prepareRefundRequest(mixed $request, string $reference): RequestInterface
     {
         /** @var AbstractRequest $refundRequest */
         $refundRequest = $this->gateway()->refund($request);
