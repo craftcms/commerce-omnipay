@@ -8,6 +8,7 @@ use craft\commerce\models\payments\CreditCardPaymentForm;
 use craft\web\View;
 
 /**
+ * @property bool $sendCartInfo
  * @author    Pixel & Tonic, Inc. <support@pixelandtonic.com>
  * @since     1.0
  */
