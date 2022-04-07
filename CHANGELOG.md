@@ -1,6 +1,6 @@
 # Release Notes for Omnipay integration package for Craft Commerce
 
-## Unreleased
+## 4.0.0-beta.2 - 2022-04-07
 
 ### Fixed
 - Fixed a bug where `sendCartInfo` wasn’t avilable in `getSettings()`.
