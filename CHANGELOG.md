@@ -1,12 +1,12 @@
 # Release Notes for Omnipay integration package for Craft Commerce
 
-## Unreleased
+## 4.0.0-beta.1 - 2022-04-07
 
 ### Added
 - Added Craft CMS 4 and Craft Commerce 4 compatibility.
 
 ### Changed
-- `sendCartInfo` setting now now support environment variables.
+- `sendCartInfo` setting now supports environment variables.
 
 ## 3.0.3.1 - 2021-11-03
 
