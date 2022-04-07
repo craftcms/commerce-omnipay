@@ -1,7 +1,6 @@
 {
   "name": "craftcms/commerce-omnipay",
   "description": "Omnipay integration package for Craft Commerce 4.0+",
-  "version": "4.0.0",
   "keywords": [
     "commerce",
     "craftcms",
