@@ -295,7 +295,7 @@ abstract class Gateway extends BaseGateway
     /**
      * @inheritdoc
      */
-    public function createPaymentSource(BasePaymentForm $sourceData, int $userId): PaymentSource
+    public function createPaymentSource(BasePaymentForm $sourceData, int $customerId): PaymentSource
     {
         if (!$this->supportsPaymentSources()) {
             throw new NotSupportedException(Craft::t('commerce', 'Payment sources are not supported by this gateway'));
@@ -305,7 +305,7 @@ abstract class Gateway extends BaseGateway
 
         if ($cart->getBillingAddress()) {
             /** @var User|CustomerBehavior|null $customer */
-            $customer = User::find()->id($userId)->one();
+            $customer = User::find()->id($customerId)->one();
 
             if (!$customer || !($address = $customer->getPrimaryBillingAddress())) {
                 throw new NotSupportedException(Craft::t('commerce', 'You need a billing address to save a payment source.'));
@@ -327,7 +327,7 @@ abstract class Gateway extends BaseGateway
         $response = $this->sendRequest($createCardRequest);
 
         $paymentSource = new PaymentSource([
-            'userId' => $userId,
+            'customerId' => $customerId,
             'gatewayId' => $this->id,
             'token' => $this->extractCardReference($response),
             'response' => $response->getData(),
