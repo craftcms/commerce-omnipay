@@ -6,11 +6,10 @@ use Craft;
 use craft\commerce\base\Gateway as BaseGateway;
 use craft\commerce\base\Purchasable;
 use craft\commerce\base\RequestResponseInterface;
+use craft\commerce\behaviors\CustomerBehavior;
 use craft\commerce\elements\Order;
 use craft\commerce\errors\PaymentException;
 use craft\commerce\helpers\Currency;
-use craft\commerce\models\LineItem;
-use craft\commerce\models\OrderAdjustment;
 use craft\commerce\models\payments\BasePaymentForm;
 use craft\commerce\models\payments\CreditCardPaymentForm;
 use craft\commerce\models\PaymentSource;
@@ -20,6 +19,8 @@ use craft\commerce\omnipay\events\ItemBagEvent;
 use craft\commerce\omnipay\events\SendPaymentRequestEvent;
 use craft\commerce\Plugin as Commerce;
 use craft\commerce\records\Transaction as TransactionRecord;
+use craft\elements\User;
+use craft\helpers\App;
 use craft\helpers\UrlHelper;
 use craft\web\Response as WebResponse;
 use Http\Adapter\Guzzle7\Client;
@@ -33,6 +34,8 @@ use Omnipay\Common\Message\AbstractResponse;
 use Omnipay\Common\Message\RequestInterface;
 use Omnipay\Common\Message\ResponseInterface;
 use Omnipay\Omnipay;
+use yii\base\Exception;
+use yii\base\InvalidConfigException;
 use yii\base\NotSupportedException;
 
 /**
@@ -40,6 +43,7 @@ use yii\base\NotSupportedException;
  *
  * @property string $itemBagClassName
  * @property string $gatewayClassName
+ * @property bool $sendCartInfo
  * @author    Pixel & Tonic, Inc. <support@pixelandtonic.com>
  * @since     1.0
  */
@@ -61,7 +65,7 @@ abstract class Gateway extends BaseGateway
      * });
      * ```
      */
-    const EVENT_AFTER_CREATE_ITEM_BAG = 'afterCreateItemBag';
+    public const EVENT_AFTER_CREATE_ITEM_BAG = 'afterCreateItemBag';
 
     /**
      * @event GatewayRequestEvent The event that is triggered before a gateway request is sent.
@@ -80,7 +84,7 @@ abstract class Gateway extends BaseGateway
      * });
      * ```
      */
-    const EVENT_BEFORE_GATEWAY_REQUEST_SEND = 'beforeGatewayRequestSend';
+    public const EVENT_BEFORE_GATEWAY_REQUEST_SEND = 'beforeGatewayRequestSend';
 
     /**
      * @event SendPaymentRequestEvent The event that is triggered right before a payment request is being sent.
@@ -99,17 +103,48 @@ abstract class Gateway extends BaseGateway
      * });
      * ```
      */
-    const EVENT_BEFORE_SEND_PAYMENT_REQUEST = 'beforeSendPaymentRequest';
+    public const EVENT_BEFORE_SEND_PAYMENT_REQUEST = 'beforeSendPaymentRequest';
 
     /**
-     * @var bool Whether cart information should be sent to the payment gateway
+     * @var bool|string Whether cart information should be sent to the payment gateway
      */
-    public $sendCartInfo = false;
+    private bool|string $_sendCartInfo = false;
 
     /**
-     * @var AbstractGateway
+     * @var AbstractGateway|null
      */
-    private $_gateway;
+    private ?AbstractGateway $_gateway = null;
+
+    /**
+     * @inheritdoc
+     */
+    public function getSettings(): array
+    {
+        $settings = parent::getSettings();
+        $settings['sendCartInfo'] = $this->getSendCartInfo(false);
+
+        return $settings;
+    }
+
+    /**
+     * @param bool $parse
+     * @return bool|string
+     * @since 4.0.0
+     */
+    public function getSendCartInfo(bool $parse = true): bool|string
+    {
+        return $parse ? App::parseBooleanEnv($this->_sendCartInfo) : $this->_sendCartInfo;
+    }
+
+    /**
+     * @param bool|string $sendCartInfo
+     * @return void
+     * @since 4.0.0
+     */
+    public function setSendCartInfo(bool|string $sendCartInfo): void
+    {
+        $this->_sendCartInfo = $sendCartInfo;
+    }
 
     /**
      * @inheritdocs
@@ -175,13 +210,14 @@ abstract class Gateway extends BaseGateway
      * Create a card object using the payment form and the optional order
      *
      * @param BasePaymentForm $paymentForm
-     * @param Order           $order
+     * @param Order|null $order
      *
      * @return CreditCard
+     * @throws InvalidConfigException
      */
-    public function createCard(BasePaymentForm $paymentForm, Order $order = null): CreditCard {
-
-        $card = new CreditCard;
+    public function createCard(BasePaymentForm $paymentForm, Order $order = null): CreditCard
+    {
+        $card = new CreditCard();
 
         if ($paymentForm instanceof CreditCardPaymentForm) {
             $this->populateCard($card, $paymentForm);
@@ -189,9 +225,8 @@ abstract class Gateway extends BaseGateway
 
         if ($order) {
             if ($billingAddress = $order->getBillingAddress()) {
-
-                $firstName = $billingAddress->firstName;
-                $lastName = $billingAddress->lastName;
+                $firstName = $billingAddress->getGivenName();
+                $lastName = $billingAddress->getFamilyName();
 
                 if ($paymentForm instanceof CreditCardPaymentForm) {
                     // Fallback to billing address names if credit card name is empty
@@ -204,46 +239,51 @@ abstract class Gateway extends BaseGateway
                 $card->setLastName($lastName);
 
                 // Fallback to credit card form names if billing address name is empty
-                $billingFirstName = $billingAddress->firstName ?: $firstName;
-                $billingLastName = $billingAddress->lastName ?: $lastName;
+                $billingFirstName = $billingAddress->getGivenName() ?: $firstName;
+                $billingLastName = $billingAddress->getFamilyName() ?: $lastName;
 
                 $card->setBillingFirstName($billingFirstName);
                 $card->setBillingLastName($billingLastName);
-                $card->setBillingAddress1($billingAddress->address1);
-                $card->setBillingAddress2($billingAddress->address2);
-                $card->setBillingCity($billingAddress->city);
-                $card->setBillingPostcode($billingAddress->zipCode);
-                if ($billingAddress->getCountry()) {
-                    $card->setBillingCountry($billingAddress->getCountry()->iso);
+
+                $card->setBillingAddress1($billingAddress->addressLine1);
+                $card->setBillingAddress2($billingAddress->addressLine2);
+                $card->setBillingCity($billingAddress->getLocality());
+                $card->setBillingPostcode($billingAddress->getPostalCode());
+
+                if ($billingCountryCode = $billingAddress->getCountryCode()) {
+                    $card->setBillingCountry($billingCountryCode);
                 }
-                if ($billingAddress->getState()) {
-                    $state = $billingAddress->getState()->abbreviation ?: $billingAddress->getState()->name;
-                    $card->setBillingState($state);
+
+                if ($billingAdministrativeArea = $billingAddress->getAdministrativeArea()) {
+                    $card->setBillingState($billingAdministrativeArea);
                 }
-                $card->setBillingPhone($billingAddress->phone);
-                $card->setBillingCompany($billingAddress->businessName);
-                $card->setCompany($billingAddress->businessName);
+
+                if ($billingOrganization = $billingAddress->getOrganization()) {
+                    $card->setBillingCompany($billingOrganization);
+                    $card->setCompany($billingOrganization);
+                }
             }
 
             if ($shippingAddress = $order->getShippingAddress()) {
-                $card->setShippingFirstName($shippingAddress->firstName);
-                $card->setShippingLastName($shippingAddress->lastName);
-                $card->setShippingAddress1($shippingAddress->address1);
-                $card->setShippingAddress2($shippingAddress->address2);
-                $card->setShippingCity($shippingAddress->city);
-                $card->setShippingPostcode($shippingAddress->zipCode);
+                $card->setShippingFirstName($shippingAddress->getGivenName());
+                $card->setShippingLastName($shippingAddress->getFamilyName());
 
-                if ($shippingAddress->getCountry()) {
-                    $card->setShippingCountry($shippingAddress->getCountry()->iso);
+                $card->setShippingAddress1($shippingAddress->addressLine1);
+                $card->setShippingAddress2($shippingAddress->addressLine2);
+                $card->setShippingCity($shippingAddress->getLocality());
+                $card->setShippingPostcode($shippingAddress->getPostalCode());
+
+                if ($shippingCountryCode = $shippingAddress->getCountryCode()) {
+                    $card->setShippingCountry($shippingCountryCode);
                 }
 
-                if ($shippingAddress->getState()) {
-                    $state = $shippingAddress->getState()->abbreviation ?: $shippingAddress->getState()->name;
-                    $card->setShippingState($state);
+                if ($shippingAdministrativeArea = $shippingAddress->getAdministrativeArea()) {
+                    $card->setShippingState($shippingAdministrativeArea);
                 }
 
-                $card->setShippingPhone($shippingAddress->phone);
-                $card->setShippingCompany($shippingAddress->businessName);
+                if ($shippingOrganization = $shippingAddress->getOrganization()) {
+                    $card->setShippingCompany($shippingOrganization);
+                }
             }
 
             $card->setEmail($order->getEmail());
@@ -255,7 +295,7 @@ abstract class Gateway extends BaseGateway
     /**
      * @inheritdoc
      */
-    public function createPaymentSource(BasePaymentForm $sourceData, int $userId): PaymentSource
+    public function createPaymentSource(BasePaymentForm $sourceData, int $customerId): PaymentSource
     {
         if (!$this->supportsPaymentSources()) {
             throw new NotSupportedException(Craft::t('commerce', 'Payment sources are not supported by this gateway'));
@@ -263,8 +303,9 @@ abstract class Gateway extends BaseGateway
 
         $cart = Commerce::getInstance()->getCarts()->getCart();
 
-        if (!$address = $cart->getBillingAddress()) {
-            $customer = Commerce::getInstance()->getCustomers()->getCustomerByUserId($userId);
+        if ($cart->getBillingAddress()) {
+            /** @var User|CustomerBehavior|null $customer */
+            $customer = User::find()->id($customerId)->one();
 
             if (!$customer || !($address = $customer->getPrimaryBillingAddress())) {
                 throw new NotSupportedException(Craft::t('commerce', 'You need a billing address to save a payment source.'));
@@ -286,11 +327,11 @@ abstract class Gateway extends BaseGateway
         $response = $this->sendRequest($createCardRequest);
 
         $paymentSource = new PaymentSource([
-            'userId' => $userId,
+            'customerId' => $customerId,
             'gatewayId' => $this->id,
             'token' => $this->extractCardReference($response),
             'response' => $response->getData(),
-            'description' => $this->extractPaymentSourceDescription($response)
+            'description' => $this->extractPaymentSourceDescription($response),
         ]);
 
         return $paymentSource;
@@ -324,12 +365,8 @@ abstract class Gateway extends BaseGateway
      *
      * @return void
      */
-    public function populateCard($card, CreditCardPaymentForm $paymentForm)
+    public function populateCard(CreditCard $card, CreditCardPaymentForm $paymentForm): void
     {
-        if (!$card instanceof CreditCard) {
-            return;
-        }
-
         $card->setFirstName($paymentForm->firstName);
         $card->setLastName($paymentForm->lastName);
         $card->setNumber($paymentForm->number);
@@ -342,11 +379,11 @@ abstract class Gateway extends BaseGateway
      * Populate the request array before it's dispatched.
      *
      * @param array $request Parameter array by reference.
-     * @param BasePaymentForm $form
+     * @param BasePaymentForm|null $paymentForm
      *
      * @return void
      */
-    abstract public function populateRequest(array &$request, BasePaymentForm $form = null);
+    abstract public function populateRequest(array &$request, BasePaymentForm $paymentForm = null): void;
 
     /**
      * @inheritdoc
@@ -473,7 +510,7 @@ abstract class Gateway extends BaseGateway
      *
      * @return ItemBag|null
      */
-    protected function createItemBagForOrder(Order $order)
+    protected function createItemBagForOrder(Order $order): ?ItemBag
     {
         if (!$this->sendCartInfo) {
             return null;
@@ -489,13 +526,13 @@ abstract class Gateway extends BaseGateway
      * Create the parameters for a payment request based on a trasaction and optional card and item list.
      *
      * @param Transaction $transaction The transaction that is basis for this request.
-     * @param CreditCard  $card        The credit card being used
-     * @param ItemBag     $itemBag     The item list.
+     * @param CreditCard|null  $card        The credit card being used
+     * @param ItemBag|null     $itemBag     The item list.
      *
      * @return array
-     * @throws \yii\base\Exception
+     * @throws Exception
      */
-    protected function createPaymentRequest(Transaction $transaction, $card = null, $itemBag = null): array
+    protected function createPaymentRequest(Transaction $transaction, ?CreditCard $card = null, ?ItemBag $itemBag = null): array
     {
         $params = ['commerceTransactionId' => $transaction->id, 'commerceTransactionHash' => $transaction->hash];
 
@@ -503,7 +540,7 @@ abstract class Gateway extends BaseGateway
             'amount' => $transaction->paymentAmount,
             'currency' => $transaction->paymentCurrency,
             'transactionId' => $transaction->hash,
-            'description' => Craft::t('commerce', 'Order').' #'.$transaction->orderId,
+            'description' => Craft::t('commerce', 'Order') . ' #' . $transaction->orderId,
             'clientIp' => Craft::$app->getRequest()->userIP ?? '',
             'transactionReference' => $transaction->hash,
             'returnUrl' => UrlHelper::actionUrl('commerce/payments/complete-payment', $params),
@@ -516,7 +553,7 @@ abstract class Gateway extends BaseGateway
         }
 
         // Do not use IPv6 loopback
-        if ($request['clientIp'] ===  '::1') {
+        if ($request['clientIp'] === '::1') {
             $request['clientIp'] = '127.0.0.1';
         }
 
@@ -549,12 +586,12 @@ abstract class Gateway extends BaseGateway
      * Prepare a request for execution by transaction and a populated payment form.
      *
      * @param Transaction     $transaction
-     * @param BasePaymentForm $form        Optional for capture/refund requests.
+     * @param BasePaymentForm|null $form        Optional for capture/refund requests.
      *
      * @return mixed
-     * @throws \yii\base\Exception
+     * @throws Exception
      */
-    protected function createRequest(Transaction $transaction, BasePaymentForm $form = null)
+    protected function createRequest(Transaction $transaction, ?BasePaymentForm $form = null): mixed
     {
         // For authorize and capture we're referring to a transaction that already took place so no card or item shenanigans.
         if (in_array($transaction->type, [TransactionRecord::TYPE_REFUND, TransactionRecord::TYPE_CAPTURE], false)) {
@@ -611,11 +648,11 @@ abstract class Gateway extends BaseGateway
      */
     protected function gateway(): AbstractGateway
     {
-        if ($this->_gateway !== null) {
-            return $this->_gateway;
+        if ($this->_gateway === null) {
+            $this->_gateway = $this->createGateway();
         }
 
-        return $this->_gateway = $this->createGateway();
+        return $this->_gateway;
     }
 
     /**
@@ -623,14 +660,15 @@ abstract class Gateway extends BaseGateway
      *
      * @return string|null
      */
-    abstract protected function getGatewayClassName();
+    abstract protected function getGatewayClassName(): ?string;
 
     /**
      * Return the class name used for item bags by this gateway.
      *
      * @return string
      */
-    protected function getItemBagClassName(): string {
+    protected function getItemBagClassName(): string
+    {
         return ItemBag::class;
     }
 
@@ -641,13 +679,13 @@ abstract class Gateway extends BaseGateway
      *
      * @return mixed
      */
-    protected function getItemBagForOrder(Order $order)
+    protected function getItemBagForOrder(Order $order): mixed
     {
         $itemBag = $this->createItemBagForOrder($order);
 
         $event = new ItemBagEvent([
             'items' => $itemBag,
-            'order' => $order
+            'order' => $order,
         ]);
         $this->trigger(self::EVENT_AFTER_CREATE_ITEM_BAG, $event);
 
@@ -660,6 +698,7 @@ abstract class Gateway extends BaseGateway
      * @param Order $order
      *
      * @return array
+     * @throws InvalidConfigException
      */
     protected function getItemListForOrder(Order $order): array
     {
@@ -668,8 +707,7 @@ abstract class Gateway extends BaseGateway
         $priceCheck = 0;
         $count = -1;
 
-        /** @var LineItem $item */
-        foreach ($order->lineItems as $item) {
+        foreach ($order->getLineItems() as $item) {
             $price = Currency::round($item->salePrice);
             // Can not accept zero amount items. See item (4) here:
             // https://developer.paypal.com/docs/classic/express-checkout/integration-guide/ECCustomizing/#setting-order-details-on-the-paypal-review-page
@@ -677,12 +715,12 @@ abstract class Gateway extends BaseGateway
             // Don't make a strict comparison here, because the price may be a rounded float.
             if ($price != 0) {
                 $count++;
-                /** @var Purchasable $purchasable */
+                /** @var Purchasable|null $purchasable */
                 $purchasable = $item->getPurchasable();
-                $defaultDescription = Craft::t('commerce', 'Item ID').' '.$item->id;
+                $defaultDescription = Craft::t('commerce', 'Item ID') . ' ' . $item->id;
                 $purchasableDescription = $purchasable ? $purchasable->getDescription() : $defaultDescription;
                 $description = isset($item->snapshot['description']) ? $item->snapshot['description'] : $purchasableDescription;
-                $description = empty($description) ? 'Item '.$count : $description;
+                $description = empty($description) ? 'Item ' . $count : $description;
                 $items[] = [
                     'name' => $description,
                     'description' => $description,
@@ -696,8 +734,7 @@ abstract class Gateway extends BaseGateway
 
         $count = -1;
 
-        /** @var OrderAdjustment $adjustment */
-        foreach ($order->adjustments as $adjustment) {
+        foreach ($order->getAdjustments() as $adjustment) {
             $price = Currency::round($adjustment->amount);
 
             // Do not include the 'included' adjustments, and do not send zero value items
@@ -705,8 +742,8 @@ abstract class Gateway extends BaseGateway
             if (($adjustment->included == 0 || $adjustment->included == false) && $price != 0) {
                 $count++;
                 $items[] = [
-                    'name' => empty($adjustment->name) ? $adjustment->type." ".$count : $adjustment->name,
-                    'description' => empty($adjustment->description) ? $adjustment->type.' '.$count : $adjustment->description,
+                    'name' => empty($adjustment->name) ? $adjustment->type . " " . $count : $adjustment->name,
+                    'description' => empty($adjustment->description) ? $adjustment->type . ' ' . $count : $adjustment->description,
                     'quantity' => 1,
                     'price' => $price,
                 ];
@@ -716,7 +753,7 @@ abstract class Gateway extends BaseGateway
 
         $priceCheck = Currency::round($priceCheck);
         $totalPrice = Currency::round($order->totalPrice);
-        $same = (bool)($priceCheck === $totalPrice);
+        $same = ($priceCheck === $totalPrice);
 
         if (!$same) {
             Craft::error('Item bag total price does not equal the orders totalPrice, some payment gateways will complain.', __METHOD__);
@@ -728,19 +765,18 @@ abstract class Gateway extends BaseGateway
     /**
      * Perform a request and return the response.
      *
-     * @param $request
-     * @param $transaction
+     * @param RequestInterface $request
+     * @param Transaction $transaction
      *
      * @return RequestResponseInterface
-     * @throws GatewayRequestCancelledException
      */
-    protected function performRequest($request, $transaction): RequestResponseInterface
+    protected function performRequest(RequestInterface $request, Transaction $transaction): RequestResponseInterface
     {
         //raising event
         $event = new GatewayRequestEvent([
             'type' => $transaction->type,
             'request' => $request,
-            'transaction' => $transaction
+            'transaction' => $transaction,
         ]);
 
         // Raise 'beforeGatewayRequestSend' event
@@ -766,11 +802,11 @@ abstract class Gateway extends BaseGateway
     /**
      * Prepare a complete authorization request from request data.
      *
-     * @param array $request
+     * @param mixed $request
      *
      * @return RequestInterface
      */
-    protected function prepareCompleteAuthorizeRequest($request): RequestInterface
+    protected function prepareCompleteAuthorizeRequest(mixed $request): RequestInterface
     {
         return $this->gateway()->completeAuthorize($request);
     }
@@ -778,11 +814,11 @@ abstract class Gateway extends BaseGateway
     /**
      * Prepare a complete purchase request from request data.
      *
-     * @param array $request
+     * @param mixed $request
      *
      * @return RequestInterface
      */
-    protected function prepareCompletePurchaseRequest($request): RequestInterface
+    protected function prepareCompletePurchaseRequest(mixed $request): RequestInterface
     {
         return $this->gateway()->completePurchase($request);
     }
@@ -790,12 +826,12 @@ abstract class Gateway extends BaseGateway
     /**
      * Prepare a capture request from request data and reference of the transaction being captured.
      *
-     * @param array  $request
+     * @param mixed  $request
      * @param string $reference
      *
      * @return RequestInterface
      */
-    protected function prepareCaptureRequest($request, string $reference): RequestInterface
+    protected function prepareCaptureRequest(mixed $request, string $reference): RequestInterface
     {
         /** @var AbstractRequest $captureRequest */
         $captureRequest = $this->gateway()->capture($request);
@@ -807,11 +843,11 @@ abstract class Gateway extends BaseGateway
     /**
      * Prepare a purchase request from request data.
      *
-     * @param array $request
+     * @param mixed $request
      *
      * @return RequestInterface
      */
-    protected function preparePurchaseRequest($request): RequestInterface
+    protected function preparePurchaseRequest(mixed $request): RequestInterface
     {
         return $this->gateway()->purchase($request);
     }
@@ -833,19 +869,18 @@ abstract class Gateway extends BaseGateway
     /**
      * Prepare a refund request from request data and reference of the transaction being refunded.
      *
-     * @param array  $request
+     * @param mixed  $request
      * @param string $reference
      *
      * @return RequestInterface
      */
-    protected function prepareRefundRequest($request, string $reference): RequestInterface
+    protected function prepareRefundRequest(mixed $request, string $reference): RequestInterface
     {
         /** @var AbstractRequest $refundRequest */
         $refundRequest = $this->gateway()->refund($request);
         $refundRequest->setTransactionReference($reference);
 
         return $refundRequest;
-
     }
 
     /**
@@ -860,7 +895,7 @@ abstract class Gateway extends BaseGateway
         $data = $request->getData();
 
         $event = new SendPaymentRequestEvent([
-            'requestData' => $data
+            'requestData' => $data,
         ]);
 
         // Raise 'beforeSendPaymentRequest' event

@@ -1,7 +1,6 @@
 {
   "name": "craftcms/commerce-omnipay",
-  "description": "Omnipay integration package for Craft Commerce 3.3+",
-  "version": "3.0.3.1",
+  "description": "Omnipay integration package for Craft Commerce 4.0+",
   "keywords": [
     "commerce",
     "craftcms",
@@ -23,7 +22,8 @@
     "rss": "https://github.com/craftcms/commerce-omnipay/commits/master.atom"
   },
   "require": {
-    "craftcms/commerce": "^3.3",
+    "php": "^8.0.2",
+    "craftcms/commerce": "^4.0.0",
     "omnipay/common": "^3.0",
     "php-http/guzzle7-adapter": "^1.0"
   },
@@ -37,5 +37,25 @@
     "handle": "commerce-omnipay",
     "changelogUrl": "https://raw.githubusercontent.com/craftcms/commerce-omnipay/master/CHANGELOG.md",
     "downloadUrl": "https://github.com/craftcms/commerce-omnipay/archive/master.zip"
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true,
+  "require-dev": {
+    "craftcms/phpstan": "dev-main",
+    "craftcms/ecs": "dev-main"
+  },
+  "config": {
+    "allow-plugins": {
+      "yiisoft/yii2-composer": true,
+      "craftcms/plugin-installer": true
+    },
+    "platform": {
+      "php": "8.0.2"
+    }
+  },
+  "scripts": {
+    "phpstan": "phpstan --memory-limit=1G",
+    "check-cs": "ecs check --ansi",
+    "fix-cs": "ecs check --ansi --fix"
   }
 }
