@@ -22,7 +22,7 @@ abstract class OffsiteGateway extends Gateway
     /**
      * @inheritdoc
      */
-    public function getPaymentFormHtml(array $params)
+    public function getPaymentFormHtml(array $params): ?string
     {
         return '';
     }
@@ -30,7 +30,7 @@ abstract class OffsiteGateway extends Gateway
     /**
      * @inheritdoc
      */
-    public function populateRequest(array &$request, BasePaymentForm $paymentForm = null)
+    public function populateRequest(array &$request, ?BasePaymentForm $paymentForm = null): void
     {
     }
 }

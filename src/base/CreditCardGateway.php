@@ -8,6 +8,7 @@ use craft\commerce\models\payments\CreditCardPaymentForm;
 use craft\web\View;
 
 /**
+ * @property bool $sendCartInfo
  * @author    Pixel & Tonic, Inc. <support@pixelandtonic.com>
  * @since     1.0
  */
@@ -16,7 +17,7 @@ abstract class CreditCardGateway extends Gateway
     /**
      * @inheritdoc
      */
-    public function getPaymentFormHtml(array $params)
+    public function getPaymentFormHtml(array $params): ?string
     {
         $defaults = [
             'paymentForm' => $this->getPaymentFormModel(),
@@ -44,7 +45,7 @@ abstract class CreditCardGateway extends Gateway
     /**
      * @inheritdoc
      */
-    public function populateRequest(array &$request, BasePaymentForm $paymentForm = null)
+    public function populateRequest(array &$request, BasePaymentForm $paymentForm = null): void
     {
         if ($paymentForm && $paymentForm->hasProperty('token') && isset($paymentForm->token) && $paymentForm->token) {
             $request['token'] = $paymentForm->token;
