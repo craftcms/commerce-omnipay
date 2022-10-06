@@ -25,7 +25,7 @@ jobs:
     name: Notify Slack
     needs: [ ecs, phpstan ]
     if: ${{ always() }}
-    uses: craftcms/.github/.github/workflows/notify-slack.yml@v1
+    uses: craftcms/.github/.github/workflows/notify-slack.yml@v2
     with:
       success: ${{ needs.ecs.result == 'success' && needs.phpstan.result == 'success' }}
       failure: ${{ needs.ecs.result == 'failure' || needs.phpstan.result == 'failure' }}
