@@ -1,5 +1,10 @@
 # Release Notes for Omnipay integration package for Craft Commerce
 
+## 4.0.0.1 - 2023-03-28
+
+### Fixed
+- Fixed a PHP error that could occur when retrieving data from a gateway response. ([#49](https://github.com/craftcms/commerce-mollie/issues/49))
+
 ## 4.0.0 - 2022-05-04
 
 ### Added
