@@ -33,7 +33,7 @@ class RequestResponse implements RequestResponseInterface
      */
     public function isSuccessful(): bool
     {
-        return $this->response->isSuccessful();
+        return (bool)$this->response->isSuccessful();
     }
 
     /**
@@ -41,7 +41,7 @@ class RequestResponse implements RequestResponseInterface
      */
     public function isProcessing(): bool
     {
-        return $this->response->isPending();
+        return (bool)$this->response->isPending();
     }
 
     /**
@@ -49,7 +49,7 @@ class RequestResponse implements RequestResponseInterface
      */
     public function isRedirect(): bool
     {
-        return $this->response->isRedirect();
+        return (bool)$this->response->isRedirect();
     }
 
     /**
@@ -57,7 +57,7 @@ class RequestResponse implements RequestResponseInterface
      */
     public function getRedirectMethod(): string
     {
-        return (string) $this->response->getRedirectMethod();
+        return (string)$this->response->getRedirectMethod();
     }
 
     /**
@@ -65,7 +65,7 @@ class RequestResponse implements RequestResponseInterface
      */
     public function getRedirectData(): array
     {
-        return $this->response->getRedirectData();
+        return $this->response->getRedirectData() ?? [];
     }
 
     /**
@@ -73,7 +73,7 @@ class RequestResponse implements RequestResponseInterface
      */
     public function getRedirectUrl(): string
     {
-        return (string) $this->response->getRedirectUrl();
+        return (string)$this->response->getRedirectUrl();
     }
 
     /**
@@ -81,7 +81,7 @@ class RequestResponse implements RequestResponseInterface
      */
     public function getTransactionReference(): string
     {
-        return (string) $this->response->getTransactionReference();
+        return (string)$this->response->getTransactionReference();
     }
 
     /**
@@ -97,7 +97,7 @@ class RequestResponse implements RequestResponseInterface
      */
     public function getMessage(): string
     {
-        return (string) $this->response->getMessage();
+        return (string)$this->response->getMessage();
     }
 
     /**
