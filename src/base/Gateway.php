@@ -523,7 +523,7 @@ abstract class Gateway extends BaseGateway
     }
 
     /**
-     * Create the parameters for a payment request based on a trasaction and optional card and item list.
+     * Create the parameters for a payment request based on a transaction and optional card and item list.
      *
      * @param Transaction $transaction The transaction that is basis for this request.
      * @param CreditCard|null  $card        The credit card being used
