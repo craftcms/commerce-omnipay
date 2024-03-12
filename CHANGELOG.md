@@ -1,5 +1,9 @@
 # Release Notes for Omnipay integration package for Craft Commerce
 
+## Unreleased
+
+- Added Craft CMS 5 and Craft Commerce 5 compatibility.
+
 ## 4.0.0.1 - 2023-03-28
 
 ### Fixed
