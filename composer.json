@@ -42,7 +42,8 @@
   "prefer-stable": true,
   "require-dev": {
     "craftcms/phpstan": "dev-main",
-    "craftcms/ecs": "dev-main"
+    "craftcms/ecs": "dev-main",
+    "craftcms/rector": "dev-main"
   },
   "config": {
     "allow-plugins": {
