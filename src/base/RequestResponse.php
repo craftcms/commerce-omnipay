@@ -65,6 +65,8 @@ class RequestResponse implements RequestResponseInterface
      */
     public function getRedirectData(): array
     {
+        // This needs to be ignored as the static analysis doesn't take into account all scenarios.
+        // @phpstan-ignore-next-line
         return $this->response->getRedirectData() ?? [];
     }
 
