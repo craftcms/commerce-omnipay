@@ -739,7 +739,7 @@ abstract class Gateway extends BaseGateway
 
             // Do not include the 'included' adjustments, and do not send zero value items
             // See item (4) https://developer.paypal.com/docs/classic/express-checkout/integration-guide/ECCustomizing/#setting-order-details-on-the-paypal-review-page
-            if (($adjustment->included == 0 || $adjustment->included == false) && $price != 0) {
+            if (!(bool)$adjustment->included && $price != 0) {
                 $count++;
                 $items[] = [
                     'name' => empty($adjustment->name) ? $adjustment->type . " " . $count : $adjustment->name,
