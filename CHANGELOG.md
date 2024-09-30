@@ -1,6 +1,6 @@
 # Release Notes for Omnipay integration package for Craft Commerce
 
-## Unreleased
+## 4.2.0 - 2024-09-30
 
 - It’s now possible to modify gateway requests before they are sent.
 - Added `craft\commerce\omnipay\base\Gateway::EVENT_BUILD_GATEWAY_REQUEST`.
