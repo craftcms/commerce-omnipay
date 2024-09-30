@@ -14,6 +14,7 @@ use craft\commerce\models\payments\BasePaymentForm;
 use craft\commerce\models\payments\CreditCardPaymentForm;
 use craft\commerce\models\PaymentSource;
 use craft\commerce\models\Transaction;
+use craft\commerce\omnipay\events\BuildGatewayRequestEvent;
 use craft\commerce\omnipay\events\GatewayRequestEvent;
 use craft\commerce\omnipay\events\ItemBagEvent;
 use craft\commerce\omnipay\events\SendPaymentRequestEvent;
@@ -104,6 +105,29 @@ abstract class Gateway extends BaseGateway
      * ```
      */
     public const EVENT_BEFORE_SEND_PAYMENT_REQUEST = 'beforeSendPaymentRequest';
+
+    /**
+     * @event BuildGatewayRequestEvent The event that is triggered when a gateway request is being built.
+     * @since 4.2.0
+     *
+     * Plugins get a chance to provide additional data to any request that is made in the context of paying for an order.
+     *
+     * There are some restrictions:
+     *     Changes to the `Transaction` model available as the `transaction` property will be ignored;
+     *
+     * ```php
+     * use craft\commerce\omnipay\base\Gateway;
+     * use craft\commerce\omnipay\events\BuildGatewayRequestEvent;
+     * use yii\base\Event;
+     *
+     * Event::on(Gateway::class, Gateway::EVENT_BUILD_GATEWAY_REQUEST, function(BuildGatewayRequestEvent $e) {
+     *     if ($e->transaction->type === 'purchase') {
+     *         $e->request['someKey'] = 'some value';
+     *     }
+     * });
+     * ```
+     */
+    public const EVENT_BUILD_GATEWAY_REQUEST = 'buildGatewayRequest';
 
     /**
      * @var bool|string Whether cart information should be sent to the payment gateway
@@ -611,7 +635,15 @@ abstract class Gateway extends BaseGateway
             $this->populateRequest($request, $form);
         }
 
-        return $request;
+        $event = new BuildGatewayRequestEvent([
+            'transaction' => $transaction,
+            'request' => $request,
+            'type' => $transaction->type,
+        ]);
+
+        $this->trigger(self::EVENT_BUILD_GATEWAY_REQUEST, $event);
+
+        return $event->request;
     }
 
     /**
