@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- It’s now possible to modify gateway requests before they are sent.
 - Added `craft\commerce\omnipay\base\Gateway::EVENT_BUILD_GATEWAY_REQUEST`.
 - Added `craft\commerce\omnipay\events\BuildGatewayRequestEvent`.
 
