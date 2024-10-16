@@ -772,10 +772,15 @@ abstract class Gateway extends BaseGateway
             // Do not include the 'included' adjustments, and do not send zero value items
             // See item (4) https://developer.paypal.com/docs/classic/express-checkout/integration-guide/ECCustomizing/#setting-order-details-on-the-paypal-review-page
             if (!(bool)$adjustment->included && $price != 0) {
-                $count++;
+
+                $name = match ($adjustment->type) {
+                    'discount' => Craft::t('Commerce', 'Discount'),
+                    default => $adjustment->getName(),
+                };
+
                 $items[] = [
-                    'name' => empty($adjustment->name) ? $adjustment->type . " " . $count : $adjustment->name,
-                    'description' => empty($adjustment->description) ? $adjustment->type . ' ' . $count : $adjustment->description,
+                    'name' => $name,
+                    'description' => $adjustment->description,
                     'quantity' => 1,
                     'price' => $price,
                 ];
