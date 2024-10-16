@@ -384,7 +384,7 @@ abstract class Gateway extends BaseGateway
     /**
      * Populate a credit card from the paymnent form.
      *
-     * @param CreditCard            $card        The credit card to populate.
+     * @param CreditCard $card The credit card to populate.
      * @param CreditCardPaymentForm $paymentForm The payment form.
      *
      * @return void
@@ -550,8 +550,8 @@ abstract class Gateway extends BaseGateway
      * Create the parameters for a payment request based on a transaction and optional card and item list.
      *
      * @param Transaction $transaction The transaction that is basis for this request.
-     * @param CreditCard|null  $card        The credit card being used
-     * @param ItemBag|null     $itemBag     The item list.
+     * @param CreditCard|null $card The credit card being used
+     * @param ItemBag|null $itemBag The item list.
      *
      * @return array
      * @throws Exception
@@ -609,8 +609,8 @@ abstract class Gateway extends BaseGateway
     /**
      * Prepare a request for execution by transaction and a populated payment form.
      *
-     * @param Transaction     $transaction
-     * @param BasePaymentForm|null $form        Optional for capture/refund requests.
+     * @param Transaction $transaction
+     * @param BasePaymentForm|null $form Optional for capture/refund requests.
      *
      * @return mixed
      * @throws Exception
@@ -660,7 +660,7 @@ abstract class Gateway extends BaseGateway
             throw new PaymentException($response->getMessage());
         }
 
-        return (string) $response->getTransactionReference();
+        return (string)$response->getTransactionReference();
     }
 
     /**
@@ -863,7 +863,7 @@ abstract class Gateway extends BaseGateway
     /**
      * Prepare a capture request from request data and reference of the transaction being captured.
      *
-     * @param mixed  $request
+     * @param mixed $request
      * @param string $reference
      *
      * @return RequestInterface
@@ -906,7 +906,7 @@ abstract class Gateway extends BaseGateway
     /**
      * Prepare a refund request from request data and reference of the transaction being refunded.
      *
-     * @param mixed  $request
+     * @param mixed $request
      * @param string $reference
      *
      * @return RequestInterface
