@@ -1,6 +1,6 @@
 # Release Notes for Omnipay integration package for Craft Commerce
 
-## Unreleased
+## 4.3.0 - 2026-06-04
 
 - It’s now possible to access the payment form from the `BuildGatewayRequestEvent` event. ([#43](https://github.com/craftcms/commerce-omnipay/issues/43))
 - Added `craft\commerce\omnipay\events\BuildGatewayRequestEvent::$paymentForm`.
