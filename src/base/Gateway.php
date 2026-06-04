@@ -639,6 +639,7 @@ abstract class Gateway extends BaseGateway
             'transaction' => $transaction,
             'request' => $request,
             'type' => $transaction->type,
+            'paymentForm' => $form,
         ]);
 
         $this->trigger(self::EVENT_BUILD_GATEWAY_REQUEST, $event);

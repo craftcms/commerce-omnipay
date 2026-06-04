@@ -7,6 +7,7 @@
 
 namespace craft\commerce\omnipay\events;
 
+use craft\commerce\models\payments\BasePaymentForm;
 use craft\commerce\models\Transaction;
 use yii\base\Event;
 
@@ -32,4 +33,10 @@ class BuildGatewayRequestEvent extends Event
      * @var string|null The type of request being made
      */
     public ?string $type = null;
+
+    /**
+     * @var BasePaymentForm|null The payment form from the request (if available)
+     * @since 4.3.0
+     */
+    public ?BasePaymentForm $paymentForm = null;
 }

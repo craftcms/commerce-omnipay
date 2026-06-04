@@ -1,5 +1,10 @@
 # Release Notes for Omnipay integration package for Craft Commerce
 
+## Unreleased
+
+- It’s now possible to access the payment form from the `BuildGatewayRequestEvent` event.
+- Added `craft\commerce\omnipay\events\BuildGatewayRequestEvent::$paymentForm`.
+
 ## 4.2.0 - 2024-09-30
 
 - It’s now possible to modify gateway requests before they are sent.
