@@ -775,7 +775,7 @@ abstract class Gateway extends BaseGateway
             if (!(bool)$adjustment->included && $price != 0) {
                 $name = match ($adjustment->type) {
                     'discount' => Craft::t('Commerce', 'Discount'),
-                    default => $adjustment->getName(),
+                    default => $adjustment->name,
                 };
 
                 $items[] = [
