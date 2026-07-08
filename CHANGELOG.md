@@ -1,6 +1,6 @@
 # Release Notes for Omnipay integration package for Craft Commerce
 
-## Unreleased
+## 4.3.1 - 2026-07-08
 
 - Fixed an error that could occur when checking out with a discount. ([#45](https://github.com/craftcms/commerce-omnipay/issues/45))
 
