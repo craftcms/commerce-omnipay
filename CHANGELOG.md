@@ -1,5 +1,9 @@
 # Release Notes for Omnipay integration package for Craft Commerce
 
+## Unreleased
+
+- Fixed an error that could occur when checking out with a discount. ([#45](https://github.com/craftcms/commerce-omnipay/issues/45))
+
 ## 4.3.0 - 2026-06-04
 
 - It’s now possible to access the payment form from the `BuildGatewayRequestEvent` event. ([#43](https://github.com/craftcms/commerce-omnipay/issues/43))

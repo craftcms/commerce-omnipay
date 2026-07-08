@@ -774,7 +774,7 @@ abstract class Gateway extends BaseGateway
             // See item (4) https://developer.paypal.com/docs/classic/express-checkout/integration-guide/ECCustomizing/#setting-order-details-on-the-paypal-review-page
             if (!(bool)$adjustment->included && $price != 0) {
                 $name = match ($adjustment->type) {
-                    'discount' => Craft::t('Commerce', 'Discount'),
+                    'discount' => Craft::t('commerce', 'Discount'),
                     default => $adjustment->name,
                 };
 
